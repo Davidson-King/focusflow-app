@@ -1,0 +1,70 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap');
+    </style>
+    <rect width="1920" height="1080" fill="#121212"/>
+
+    <!-- Browser Window -->
+    <rect x="80" y="60" width="1760" height="960" rx="12" fill="#1E1E1E" stroke="#2C2C2E" stroke-width="2"/>
+    <rect x="80" y="60" width="1760" height="48" fill="#121212" rx="12" ry="12"/>
+    <path d="M80 72 H 1840" stroke="#2C2C2E" stroke-width="2"/>
+    <circle cx="105" cy="84" r="7" fill="#FF5F56"/>
+    <circle cx="129" cy="84" r="7" fill="#FFBD2E"/>
+    <circle cx="153" cy="84" r="7" fill="#27C93F"/>
+
+    <!-- Sidebar -->
+    <rect x="82" y="108" width="240" height="910" fill="#1E1E1E"/>
+    <path d="M322 108 V 1020" stroke="#2C2C2E" stroke-width="2"/>
+    <text x="102" y="152" font-family="Inter, sans-serif" font-weight="700" font-size="24" fill="#E5E5E7">FocusFlow</text>
+    
+    <g transform="translate(92, 200)">
+        <text x="40" y="26" font-family="Inter, sans-serif" font-weight="500" font-size="14" fill="#8E8E93">Home</text>
+    </g>
+    <g transform="translate(92, 250)">
+        <text x="40" y="26" font-family="Inter, sans-serif" font-weight="500" font-size="14" fill="#8E8E93">Tasks</text>
+    </g>
+    <g transform="translate(92, 300)">
+        <rect width="220" height="40" rx="8" fill="#007AFF" fill-opacity="0.1"/>
+        <text x="40" y="26" font-family="Inter, sans-serif" font-weight="600" font-size="14" fill="#007AFF">Notes</text>
+    </g>
+    <g transform="translate(92, 350)">
+        <text x="40" y="26" font-family="Inter, sans-serif" font-weight="500" font-size="14" fill="#8E8E93">Journal</text>
+    </g>
+
+    <!-- Notes List -->
+    <rect x="324" y="108" width="360" height="910" fill="#1E1E1E"/>
+    <path d="M684 108 V 1020" stroke="#2C2C2E" stroke-width="2"/>
+    <text x="344" y="152" font-family="Inter, sans-serif" font-weight="700" font-size="24" fill="#E5E5E7">Notes</text>
+
+    <g transform="translate(334, 190)">
+        <rect width="340" height="70" rx="8" fill="#007AFF" fill-opacity="0.1"/>
+        <text x="20" y="30" font-family="Inter, sans-serif" font-weight="600" font-size="14" fill="#E5E5E7">Q3 Marketing Strategy</text>
+        <text x="20" y="55" font-family="Inter, sans-serif" font-weight="400" font-size="12" fill="#8E8E93">Updated just now</text>
+    </g>
+    <g transform="translate(334, 270)">
+        <text x="20" y="30" font-family="Inter, sans-serif" font-weight="500" font-size="14" fill="#E5E5E7">Project Phoenix - Meeting Notes</text>
+        <text x="20" y="55" font-family="Inter, sans-serif" font-weight="400" font-size="12" fill="#8E8E93">Updated 2 hours ago</text>
+    </g>
+    <g transform="translate(334, 340)">
+        <text x="20" y="30" font-family="Inter, sans-serif" font-weight="500" font-size="14" fill="#E5E5E7">Ideas for new feature</text>
+        <text x="20" y="55" font-family="Inter, sans-serif" font-weight="400" font-size="12" fill="#8E8E93">Updated yesterday</text>
+    </g>
+
+    <!-- Note Editor -->
+    <rect x="686" y="108" width="1152" height="910" fill="#121212"/>
+    <path d="M686 170 H 1838" stroke="#2C2C2E" stroke-width="2"/>
+    <text x="716" y="148" font-family="Inter, sans-serif" font-weight="700" font-size="28" fill="#E5E5E7">Q3 Marketing Strategy</text>
+    
+    <g transform="translate(716, 200)">
+        <text font-family="Inter, sans-serif" font-weight="700" font-size="18" fill="#E5E5E7">Key Objectives:</text>
+        <text y="40" font-family="Inter, sans-serif" font-weight="400" font-size="16" fill="#E5E5E7">- Increase user engagement by 15% through targeted campaigns.</text>
+        <text y="70" font-family="Inter, sans-serif" font-weight="400" font-size="16" fill="#E5E5E7">- Launch the new 'Goals' feature with a dedicated blog post and social media push.</text>
+        <text y="100" font-family="Inter, sans-serif" font-weight="400" font-size="16" fill="#E5E5E7">- Explore partnership opportunities with creators in the productivity space.</text>
+    </g>
+    
+    <g transform="translate(716, 350)">
+        <text font-family="Inter, sans-serif" font-weight="700" font-size="18" fill="#E5E5E7">Timeline:</text>
+        <text y="40" font-family="Inter, sans-serif" font-weight="400" font-size="16" fill="#E5E5E7"><tspan font-weight="600">Week 1-2:</tspan> Finalize campaign creative and copy.</text>
+        <text y="70" font-family="Inter, sans-serif" font-weight="400" font-size="16" fill="#E5E5E7"><tspan font-weight="600">Week 3:</tspan> Launch blog post and initial social media announcements.</text>
+    </g>
+</svg>

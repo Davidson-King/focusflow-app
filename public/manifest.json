@@ -1,0 +1,52 @@
+{
+  "short_name": "FocusFlow",
+  "name": "FocusFlow: Your Productivity Hub",
+  "description": "The minimalist, offline-first dashboard to manage your tasks, notes, goals, and more.",
+  "icons": [
+    {
+      "src": "/icon-192.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/icon-512.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#121212",
+  "background_color": "#121212",
+  "shortcuts": [
+    {
+      "name": "New Task",
+      "url": "/#/dashboard/tasks",
+      "description": "Quickly add a new task"
+    },
+    {
+      "name": "New Note",
+      "url": "/#/dashboard/notes",
+      "description": "Start writing a new note"
+    },
+    {
+      "name": "Today's Journal",
+      "url": "/#/dashboard/journal",
+      "description": "Open today's journal entry"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot1.svg",
+      "type": "image/svg+xml",
+      "sizes": "1080x1920",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/screenshot2.svg",
+      "type": "image/svg+xml",
+      "sizes": "1920x1080",
+      "form_factor": "wide"
+    }
+  ]
+}
