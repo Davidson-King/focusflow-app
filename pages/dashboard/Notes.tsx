@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect, useContext, useCallback } from 'react';
 import { useIndexedDB } from '../../hooks/useIndexedDB.ts';
 import type { Note, Folder } from '../../types.ts';
@@ -11,8 +10,7 @@ import { useNotifier } from '../../contexts/NotificationContext.tsx';
 import TagInput from '../../components/TagInput.tsx';
 import RichTextEditor from '../../components/RichTextEditor.tsx';
 import { useLocation } from 'react-router-dom';
-// FIX: Changed import of 'react-window' from a namespace import to a named import to resolve module resolution error.
-import { FixedSizeList } from 'react-window';
+import * as ReactWindow from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import ButtonSpinner from '../../components/ButtonSpinner.tsx';
 import { countWords } from '../../utils/text.ts';
@@ -374,14 +372,14 @@ const Notes: React.FC = () => {
                     {isLoading ? <div className="p-4"><div className="flex justify-center items-center h-full"><Spinner /></div></div> : sortedNotes.length > 0 ? (
                         <AutoSizer>
                             {({ height, width }) => (
-                                <FixedSizeList
+                                <ReactWindow.FixedSizeList
                                     height={height}
                                     itemCount={sortedNotes.length}
                                     itemSize={65}
                                     width={width}
                                 >
                                     {NoteRow}
-                                </FixedSizeList>
+                                </ReactWindow.FixedSizeList>
                             )}
                         </AutoSizer>
                     ) : (

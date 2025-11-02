@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useContext, useEffect } from 'react';
 import { useIndexedDB } from '../../hooks/useIndexedDB.ts';
 import type { Task, Priority, Recurrence } from '../../types.ts';
@@ -11,8 +10,7 @@ import { useNotifier } from '../../contexts/NotificationContext.tsx';
 import { notificationService } from '../../services/notificationService.ts';
 import ButtonSpinner from '../../components/ButtonSpinner.tsx';
 import { useLocation } from 'react-router-dom';
-// FIX: Changed import of 'react-window' from a namespace import to a named import to resolve module resolution error.
-import { FixedSizeList } from 'react-window';
+import * as ReactWindow from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 
 const priorityMap: Record<Priority, { label: string; color: string; bg: string }> = {
@@ -543,14 +541,14 @@ const Tasks: React.FC = () => {
                      <div className="h-[calc(100vh-26rem)]">
                         <AutoSizer>
                             {({ height, width }) => (
-                                <FixedSizeList
+                                <ReactWindow.FixedSizeList
                                     height={height}
                                     itemCount={flatTaskList.length}
                                     itemSize={80} // Adjust based on TaskItem height
                                     width={width}
                                 >
                                     {TaskRow}
-                                </FixedSizeList>
+                                </ReactWindow.FixedSizeList>
                             )}
                         </AutoSizer>
                     </div>
