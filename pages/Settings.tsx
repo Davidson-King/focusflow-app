@@ -1,4 +1,5 @@
 
+
 import React, { useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { ThemeContext } from '../contexts/ThemeContext.tsx';
 import { AuthContext } from '../contexts/AuthContext.tsx';
@@ -6,12 +7,13 @@ import { themes } from '../constants/themes.ts';
 import { useNotifier } from '../contexts/NotificationContext.tsx';
 import { db } from '../services/db.ts';
 import ButtonSpinner from '../components/ButtonSpinner.tsx';
-import { SunIcon, MoonIcon } from '../components/Icons.tsx';
+import { SunIcon, MoonIcon, CloudArrowDownIcon, CheckCircleIcon } from '../components/Icons.tsx';
 import ImportConfirmationModal from '../components/ImportConfirmationModal.tsx';
 import PreImportWarningModal from '../components/PreImportWarningModal.tsx';
 import { fileToBase64, resizeImage } from '../utils/image.ts';
 import { useDataVersion } from '../contexts/DataContext.tsx';
 import { exportData } from '../utils/data.ts';
+import { usePWA } from '../contexts/PWAContext.tsx';
 
 const showImportOverlay = (status: 'importing' | 'reloading' | 'error', message?: string) => {
     let overlay = document.getElementById('import-process-overlay');
@@ -122,6 +124,7 @@ const Settings: React.FC = () => {
     const { user, updateUser } = useContext(AuthContext);
     const { addNotification } = useNotifier();
     const { incrementDataVersion } = useDataVersion();
+    const { installPromptEvent, isAppInstalled, triggerInstallPrompt } = usePWA();
     
     const [name, setName] = useState(user?.name || '');
     const [isPreImportModalOpen, setIsPreImportModalOpen] = useState(false);
@@ -317,6 +320,28 @@ const Settings: React.FC = () => {
                              </div>
                         </div>
                     </div>
+                </div>
+
+                {/* Application Section */}
+                <div className="bg-light-card dark:bg-dark-card p-6 rounded-xl">
+                    <h2 className="text-xl font-semibold mb-2 border-b border-light-border dark:border-dark-border pb-2">Application</h2>
+                    <p className="text-sm text-dark-text-secondary mb-4">Get a native app-like experience with offline access by installing FocusFlow to your device.</p>
+                    {isAppInstalled ? (
+                        <div className="flex items-center gap-3 p-3 bg-green-500/10 text-green-400 rounded-lg">
+                            <CheckCircleIcon className="w-6 h-6" />
+                            <span className="font-semibold">FocusFlow is already installed on this device.</span>
+                        </div>
+                    ) : installPromptEvent ? (
+                        <button 
+                            onClick={triggerInstallPrompt} 
+                            className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-hover"
+                        >
+                            <CloudArrowDownIcon className="w-5 h-5" />
+                            <span>Install FocusFlow App</span>
+                        </button>
+                    ) : (
+                        <p className="text-sm text-dark-text-secondary">App installation is not currently available for your browser, or you may have dismissed the prompt.</p>
+                    )}
                 </div>
 
                 {/* Data Management Section */}

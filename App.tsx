@@ -7,6 +7,7 @@ import { AuthProvider } from './contexts/AuthContext.tsx';
 import { NotificationProvider } from './contexts/NotificationContext.tsx';
 import { DataProvider } from './contexts/DataContext.tsx';
 import { OfflineProvider } from './contexts/OfflineContext.tsx';
+import { PWAProvider } from './contexts/PWAContext.tsx';
 
 import LandingPage from './pages/LandingPage.tsx';
 import DashboardLayout from './pages/DashboardLayout.tsx';
@@ -93,7 +94,7 @@ const App: React.FC = () => {
                                         <Route path="/privacy" element={<PrivacyPolicy />} />
                                         <Route path="/terms" element={<TermsOfService />} />
                                         <Route path="/faq" element={<FAQ />} />
-                                        <Route path="/dashboard" element={<DashboardLayout />}>
+                                        <Route path="/dashboard" element={<PWAProvider><DashboardLayout /></PWAProvider>}>
                                             <Route index element={<Navigate to="home" replace />} />
                                             <Route path="home" element={<Home />} />
                                             <Route path="tasks" element={<Tasks />} />

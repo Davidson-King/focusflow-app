@@ -9,6 +9,7 @@ import BackupReminderModal from '../components/BackupReminderModal.tsx';
 import { db } from '../services/db.ts';
 import { exportData } from '../utils/data.ts';
 import { useNotifier } from '../contexts/NotificationContext.tsx';
+import { usePWA } from '../contexts/PWAContext.tsx';
 
 const navLinks = [
     { to: 'home', text: 'Home', icon: HomeIcon },
@@ -50,8 +51,7 @@ const DashboardLayout: React.FC = () => {
     const [isEditLayout, setIsEditLayout] = useState(false);
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [showBackupReminder, setShowBackupReminder] = useState(false);
-    const [installPromptEvent, setInstallPromptEvent] = useState<any>(null);
-    const [isAppInstalled, setIsAppInstalled] = useState(false);
+    const { installPromptEvent, isAppInstalled, triggerInstallPrompt } = usePWA();
     const { addNotification } = useNotifier();
 
     useEffect(() => {
@@ -81,42 +81,8 @@ const DashboardLayout: React.FC = () => {
             }
         };
         checkBackupReminder();
-        
-        // PWA Install prompt
-        const handleBeforeInstallPrompt = (e: Event) => {
-            e.preventDefault();
-            setInstallPromptEvent(e);
-        };
-        const handleAppInstalled = () => {
-            setInstallPromptEvent(null);
-            setIsAppInstalled(true);
-        };
-
-        if (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone) {
-            setIsAppInstalled(true);
-        }
-
-        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-        window.addEventListener('appinstalled', handleAppInstalled);
-
-        return () => {
-            window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-            window.removeEventListener('appinstalled', handleAppInstalled);
-        };
 
     }, []);
-    
-    const handleInstallClick = () => {
-        if (installPromptEvent && installPromptEvent.prompt) {
-            installPromptEvent.prompt();
-            installPromptEvent.userChoice.then((choiceResult: { outcome: string }) => {
-                if (choiceResult.outcome === 'accepted') {
-                    addNotification('FocusFlow installed successfully!', 'success');
-                }
-                setInstallPromptEvent(null);
-            });
-        }
-    };
 
     const handleOnboardingClose = async () => {
         await db.put('settings', true, 'hasSeenOnboarding');
@@ -162,7 +128,7 @@ const DashboardLayout: React.FC = () => {
                  {!isAppInstalled && installPromptEvent && (
                     <div className="my-2">
                         <button
-                            onClick={handleInstallClick}
+                            onClick={triggerInstallPrompt}
                             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/20 text-primary font-semibold hover:bg-primary/30 transition-colors"
                         >
                             <CloudArrowDownIcon className="w-5 h-5" />

@@ -10,6 +10,7 @@ import { useNotifier } from '../../contexts/NotificationContext.tsx';
 import TagInput from '../../components/TagInput.tsx';
 import RichTextEditor from '../../components/RichTextEditor.tsx';
 import { useLocation } from 'react-router-dom';
+// FIX: Switched to a namespace import for react-window to correctly access FixedSizeList.
 import * as ReactWindow from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import ButtonSpinner from '../../components/ButtonSpinner.tsx';
