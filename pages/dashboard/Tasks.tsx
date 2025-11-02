@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useContext, useEffect } from 'react';
 import { useIndexedDB } from '../../hooks/useIndexedDB.ts';
 import type { Task, Priority, Recurrence } from '../../types.ts';
@@ -10,11 +11,9 @@ import { useNotifier } from '../../contexts/NotificationContext.tsx';
 import { notificationService } from '../../services/notificationService.ts';
 import ButtonSpinner from '../../components/ButtonSpinner.tsx';
 import { useLocation } from 'react-router-dom';
-// FIX: The alias 'List' for 'FixedSizeList' was causing a module resolution error. Importing directly and using the full component name fixes this.
-import * as ReactWindow from 'react-window';
+// FIX: Changed import of 'react-window' from a namespace import to a named import to resolve module resolution error.
+import { FixedSizeList } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
-
-const { FixedSizeList } = ReactWindow;
 
 const priorityMap: Record<Priority, { label: string; color: string; bg: string }> = {
     3: { label: 'High', color: 'text-red-400', bg: 'bg-red-400/10' },
@@ -63,15 +62,18 @@ const AddTaskForm: React.FC<{
             }
         }
     };
+    
+    // For the main add task form, we wrap it to provide spacing. For subtasks, it's borderless.
+    const formContainerClass = isSubtask ? 'p-3 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg' : 'mb-6';
 
     return (
-        <form id={isSubtask ? '' : 'add-task-form'} onSubmit={handleSubmit} className={`p-3 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg ${isSubtask ? '' : 'mb-6'}`}>
+        <form id={isSubtask ? '' : 'add-task-form'} onSubmit={handleSubmit} className={formContainerClass}>
             <input
                 type="text"
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 placeholder={isSubtask ? "Add a new sub-task..." : "Add a new task..."}
-                className="w-full bg-transparent focus:outline-none mb-2"
+                className="w-full p-3 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-primary focus:outline-none mb-2"
                 aria-label={isSubtask ? "New sub-task name" : "New task name"}
                 autoFocus={shouldFocus}
             />
@@ -118,6 +120,7 @@ const TaskItem: React.FC<{
     const [editPriority, setEditPriority] = useState<Priority>(task.priority);
     const [editRecurrence, setEditRecurrence] = useState<'none' | 'daily' | 'weekly' | 'monthly'>(task.recurring?.frequency || 'none');
     const { addNotification } = useNotifier();
+    const level = (task as any)._level || 0;
 
     const handleSave = async () => {
         try {
@@ -182,8 +185,8 @@ const TaskItem: React.FC<{
 
     if (isEditing) {
         return (
-             <div className="p-3 bg-light-card dark:bg-dark-card border-2 border-primary rounded-lg">
-                <input type="text" value={editText} onChange={e => setEditText(e.target.value)} className="w-full bg-transparent focus:outline-none mb-2" autoFocus />
+             <div className="p-3 bg-light-card dark:bg-dark-card border-2 border-primary rounded-lg" style={{ marginLeft: `${level * 1.75}rem` }}>
+                <input type="text" value={editText} onChange={e => setEditText(e.target.value)} className="w-full bg-light-bg dark:bg-dark-bg p-2 rounded-md focus:outline-none mb-2" autoFocus />
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 flex-wrap">
                         <input type="date" value={editDueDate} onChange={e => setEditDueDate(e.target.value)} aria-label="Due date" className="bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-md p-1 text-sm focus:ring-1 focus:ring-primary focus:outline-none" />
@@ -225,8 +228,11 @@ const TaskItem: React.FC<{
 
     return (
         <div id={`task-container-${task.id}`}>
-            <div className="flex items-start p-3 bg-light-card dark:bg-dark-card rounded-lg group transition-colors duration-200 hover:bg-light-bg dark:hover:bg-dark-border hover:shadow-md">
-                <div className="flex-shrink-0 flex items-center justify-center w-6 h-6 mr-1">
+            <div 
+                className={`flex items-start p-3 bg-light-card dark:bg-dark-card rounded-lg group transition-colors duration-200 hover:bg-light-bg dark:hover:bg-dark-border hover:shadow-md ${level > 0 ? 'border-l-2 border-light-border dark:border-dark-border ml-2' : ''}`}
+                style={{ paddingLeft: `calc(${level * 1.75}rem + 0.75rem)` }}
+            >
+                <div className="flex-shrink-0 flex items-center justify-center w-6 h-6 mr-1" style={{ marginLeft: `calc(${level * -1.75}rem - 2px)` }}>
                     {hasChildren && (
                         <button 
                             onClick={() => onToggleExpand(task.id)} 
@@ -272,7 +278,7 @@ const TaskItem: React.FC<{
                 </div>
             </div>
             {isAddingSubtask && (
-                <div className="mt-2 pl-6">
+                <div className="mt-2" style={{ paddingLeft: `${(level + 1) * 1.75}rem` }}>
                     <AddTaskForm onAdd={onAddSubtask} parentId={task.id} onCancel={() => setIsAddingSubtask(false)} isSubtask />
                 </div>
             )}
@@ -501,22 +507,19 @@ const Tasks: React.FC = () => {
 
     const TaskRow = ({ index, style }: { index: number; style: React.CSSProperties }) => {
         const task = flatTaskList[index];
-        const level = (task as any)._level || 0;
 
         return (
             <div style={style} className="px-1 py-1">
-                <div style={{ marginLeft: `${level * 2}rem` }}>
-                    <TaskItem 
-                        task={task} 
-                        onUpdate={handleUpdateTask} 
-                        onDeleteRequest={handleDeleteRequest} 
-                        onAddSubtask={handleAddTask}
-                        onAddNextRecurring={handleAddTask}
-                        hasChildren={allTasks.some(t => t.parentId === task.id)}
-                        isExpanded={expandedTasks.has(task.id)}
-                        onToggleExpand={toggleExpand}
-                    />
-                </div>
+                <TaskItem 
+                    task={task} 
+                    onUpdate={handleUpdateTask} 
+                    onDeleteRequest={handleDeleteRequest} 
+                    onAddSubtask={handleAddTask}
+                    onAddNextRecurring={handleAddTask}
+                    hasChildren={allTasks.some(t => t.parentId === task.id)}
+                    isExpanded={expandedTasks.has(task.id)}
+                    onToggleExpand={toggleExpand}
+                />
             </div>
         );
     };

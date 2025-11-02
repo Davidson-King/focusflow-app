@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useNotifier } from '../contexts/NotificationContext.tsx';
@@ -92,7 +93,7 @@ const Contact: React.FC = () => {
                             value={senderEmail}
                             onChange={(e) => setSenderEmail(e.target.value)}
                             placeholder="So we can reply to you"
-                            className="mt-1 w-full p-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg"
+                            className="mt-1 w-full p-3 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg"
                         />
                     </div>
                     <div>
@@ -103,7 +104,7 @@ const Contact: React.FC = () => {
                             name="subject"
                             value={subject}
                             onChange={(e) => setSubject(e.target.value)}
-                            className="mt-1 w-full p-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg"
+                            className="mt-1 w-full p-3 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg"
                         />
                     </div>
                     <div>
@@ -116,7 +117,7 @@ const Contact: React.FC = () => {
                             onChange={(e) => setBody(e.target.value)}
                             placeholder="Tell us what you think..."
                             required
-                            className="mt-1 w-full p-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg resize-y"
+                            className="mt-1 w-full p-3 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg resize-y"
                         />
                     </div>
                      <div className="mt-6 flex justify-end">

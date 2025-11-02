@@ -1,3 +1,14 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom placeholder styles for better visibility */
+::placeholder {
+  color: #6D6D72; /* A medium gray for light mode */
+  opacity: 1; /* Firefox adds a lower opacity by default */
+}
+
+.dark ::placeholder {
+  color: #8E8E93; /* dark-text-secondary */
+}

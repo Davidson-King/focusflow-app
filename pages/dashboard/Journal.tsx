@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect, useContext, useCallback } from 'react';
 import { useIndexedDB } from '../../hooks/useIndexedDB.ts';
 import type { JournalEntry, Folder } from '../../types.ts';
@@ -9,13 +10,11 @@ import { AuthContext } from '../../contexts/AuthContext.tsx';
 import { useNotifier } from '../../contexts/NotificationContext.tsx';
 import RichTextEditor from '../../components/RichTextEditor.tsx';
 import { useLocation } from 'react-router-dom';
-// FIX: The alias 'List' for 'FixedSizeList' was causing a module resolution error. Importing directly and using the full component name fixes this.
-import * as ReactWindow from 'react-window';
+// FIX: Changed import of 'react-window' from a namespace import to a named import to resolve module resolution error.
+import { FixedSizeList } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import ButtonSpinner from '../../components/ButtonSpinner.tsx';
 import { countWords } from '../../utils/text.ts';
-
-const { FixedSizeList } = ReactWindow;
 
 const useDebounce = <T,>(value: T, delay: number): T => {
     const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -174,7 +173,7 @@ const JournalEditor: React.FC<{
                         value={title}
                         onChange={(e) => { setTitle(e.target.value); setSaveStatus('unsaved'); }}
                         placeholder="Entry Title"
-                        className="w-full bg-transparent text-2xl font-bold focus:outline-none flex-1"
+                        className="w-full flex-1 bg-light-card dark:bg-dark-card p-2 -mx-2 rounded-lg text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-primary"
                         aria-label="Journal Entry Title"
                     />
                      <div className="flex items-center gap-1 text-sm text-dark-text-secondary">
@@ -343,7 +342,7 @@ const Journal: React.FC = () => {
                     </button>
                 </div>
                  <div className="p-2 border-b border-light-border dark:border-dark-border">
-                    <input type="text" placeholder="Search entries..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full p-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg" />
+                    <input type="text" placeholder="Search entries..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full p-3 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg" />
                 </div>
                  <div className="p-2 border-b border-light-border dark:border-dark-border">
                     <label htmlFor="folder-filter" className="sr-only">Filter by folder</label>
