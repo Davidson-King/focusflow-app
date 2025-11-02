@@ -1,4 +1,3 @@
-
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
 
 // Define the schema of the database.
@@ -45,13 +44,18 @@ interface FocusFlowDB extends DBSchema {
     };
 }
 
+// FIX: Explicitly define store names to prevent type widening from `keyof FocusFlowDB` to `string`.
+// This resolves issues with passing store names to the `idb` library methods.
+type StoreName = 'tasks' | 'notes' | 'journal' | 'goals' | 'timelines' | 'folders' | 'userProfile' | 'settings' | 'achievements' | 'feedback-outbox';
+
 let dbPromise: Promise<IDBPDatabase<FocusFlowDB>>;
 
 const initDB = () => {
     if (!dbPromise) {
         dbPromise = openDB<FocusFlowDB>('FocusFlowDB', 3, {
             upgrade(db, oldVersion, newVersion, transaction) {
-                const stores: (keyof FocusFlowDB)[] = ['tasks', 'notes', 'journal', 'goals', 'timelines', 'folders', 'achievements', 'feedback-outbox'];
+                // FIX: Use the specific StoreName[] type to prevent type-widening issues with generics in the idb library.
+                const stores: StoreName[] = ['tasks', 'notes', 'journal', 'goals', 'timelines', 'folders', 'achievements', 'feedback-outbox'];
 
                 for (const storeName of stores) {
                     if (!db.objectStoreNames.contains(storeName)) {
@@ -72,15 +76,15 @@ const initDB = () => {
 };
 
 export const db = {
-    async get<T extends keyof FocusFlowDB>(storeName: T, key: string): Promise<FocusFlowDB[T]['value'] | undefined> {
+    async get<T extends StoreName>(storeName: T, key: string): Promise<FocusFlowDB[T]['value'] | undefined> {
         const db = await initDB();
         return db.get(storeName, key);
     },
-    async getAll<T extends keyof FocusFlowDB>(storeName: T): Promise<FocusFlowDB[T]['value'][]> {
+    async getAll<T extends StoreName>(storeName: T): Promise<FocusFlowDB[T]['value'][]> {
         const db = await initDB();
         return db.getAll(storeName);
     },
-    async getAllEntries<T extends keyof FocusFlowDB>(storeName: T): Promise<{key: any, value: any}[]> {
+    async getAllEntries<T extends StoreName>(storeName: T): Promise<{key: any, value: any}[]> {
         const db = await initDB();
         const tx = db.transaction(storeName, 'readonly');
         const store = tx.objectStore(storeName);
@@ -92,21 +96,21 @@ export const db = {
         }
         return entries;
     },
-    async put<T extends keyof FocusFlowDB>(storeName: T, value: any, key?: string): Promise<void> {
+    async put<T extends StoreName>(storeName: T, value: any, key?: string): Promise<void> {
         const db = await initDB();
         await db.put(storeName, value, key);
     },
-    async putAll<T extends keyof FocusFlowDB>(storeName: T, values: any[]): Promise<void> {
+    async putAll<T extends StoreName>(storeName: T, values: any[]): Promise<void> {
         const db = await initDB();
         const tx = db.transaction(storeName, 'readwrite');
         await Promise.all(values.map(val => tx.store.put(val)));
         await tx.done;
     },
-    async delete<T extends keyof FocusFlowDB>(storeName: T, key: string): Promise<void> {
+    async delete<T extends StoreName>(storeName: T, key: string): Promise<void> {
         const db = await initDB();
         await db.delete(storeName, key);
     },
-    async clear<T extends keyof FocusFlowDB>(storeName: T): Promise<void> {
+    async clear<T extends StoreName>(storeName: T): Promise<void> {
         const db = await initDB();
         await db.clear(storeName);
     }

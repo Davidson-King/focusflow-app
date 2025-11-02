@@ -50,9 +50,9 @@ const Support: React.FC = () => {
     const { addNotification } = useNotifier();
     const [copyText, setCopyText] = useState('Copy Story Message');
 
-    const shareText = encodeURIComponent("I've been boosting my productivity with FocusFlow, the free, offline-first app that keeps my data private. Finally, a tool that helps me focus without distractions. You should check it out! #productivity #focus #privacy");
     const appUrl = "https://focusflowlab.netlify.app";
-    const shareUrl = `https://twitter.com/intent/tweet?text=${shareText}&url=${encodeURIComponent(appUrl)}`;
+    const shareTextContent = `I've been boosting my productivity with FocusFlow, the free, offline-first app that keeps my data private. Finally, a tool that helps me focus without distractions. You should check it out! ${appUrl} #productivity #focus #privacy`;
+    const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareTextContent)}`;
     
     const instagramMessage = `Loving FocusFlow for staying organized! It's a free, private, and offline-first productivity app. Highly recommend! #focusflow #productivity #privacyfirst`;
 
