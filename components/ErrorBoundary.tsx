@@ -1,4 +1,5 @@
 
+
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 
 interface ErrorBoundaryProps {
@@ -63,7 +64,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
       );
     }
 
-    // FIX: Moved the return statement inside the render method. An Error Boundary must return its children if there is no error.
+    // FIX: Moved the return statement to be inside the render method. An Error Boundary must return its children if there is no error.
     return this.props.children;
   }
 }
