@@ -42,15 +42,15 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, onSave, eventT
             <div className="space-y-4">
                 <div>
                     <label className="block text-sm font-medium mb-1">Title</label>
-                    <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full p-2 bg-light-bg dark:bg-dark-bg border rounded-lg" />
+                    <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full p-2 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg" />
                 </div>
                  <div>
                     <label className="block text-sm font-medium mb-1">Date</label>
-                    <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full p-2 bg-light-bg dark:bg-dark-bg border rounded-lg" />
+                    <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full p-2 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg" />
                 </div>
                  <div>
                     <label className="block text-sm font-medium mb-1">Description (Optional)</label>
-                    <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} className="w-full p-2 bg-light-bg dark:bg-dark-bg border rounded-lg resize-none" />
+                    <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} className="w-full p-2 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg resize-none" />
                 </div>
                 <div className="flex justify-end gap-3 pt-4">
                     <button onClick={onClose} className="px-4 py-2 rounded-lg bg-dark-border">Cancel</button>

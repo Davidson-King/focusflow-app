@@ -21,9 +21,7 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// sw.js
-
-const CACHE_NAME = 'focusflow-cache-v8'; // Increment version on major change
+const CACHE_NAME = 'focusflow-cache-v9'; // Increment version to trigger update
 const APP_SHELL_URLS = [
   '/',
   '/index.html',
@@ -41,18 +39,17 @@ const APP_SHELL_URLS = [
   'https://aistudiocdn.com/react@^19.2.0',
   'https://aistudiocdn.com/react-dom@^19.2.0',
   'https://aistudiocdn.com/react-router-dom@^7.9.4',
-  'https://aistudiocdn.com/quill@^2.0.3',
+  'https://aistudiocdn.com/quill@2.0.2',
   'https://aistudiocdn.com/react-virtualized-auto-sizer@^1.0.26',
   'https://aistudiocdn.com/react-window@^2.2.1'
 ];
-const CDN_URLS = [
-    'https://cdn.tailwindcss.com',
-    'https://fonts.googleapis.com',
-    'https://fonts.gstatic.com',
-    'https://esm.sh',
-    'https://aistudiocdn.com',
-    'https://cdn.jsdelivr.net'
-];
+
+// Listen for a message from the client to activate the new service worker.
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -62,7 +59,6 @@ self.addEventListener('install', (event) => {
         const requests = APP_SHELL_URLS.map(url => new Request(url, { cache: 'reload' }));
         return cache.addAll(requests);
       })
-      .then(() => self.skipWaiting())
       .catch(err => {
         console.error('[SW] Pre-caching failed:', err);
       })

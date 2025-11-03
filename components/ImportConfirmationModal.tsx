@@ -32,7 +32,7 @@ const ImportConfirmationModal: React.FC<ImportConfirmationModalProps> = ({ isOpe
                     type="text" 
                     value={confirmText}
                     onChange={e => setConfirmText(e.target.value)}
-                    className="w-full p-2 bg-dark-bg border border-dark-border rounded-lg"
+                    className="w-full p-2 bg-light-card dark:bg-dark-card border border-dark-border rounded-lg"
                     autoFocus
                 />
             </div>

@@ -72,11 +72,11 @@ const GoalModal: React.FC<{
             <div className="space-y-4">
                 <div>
                     <label className="block text-sm font-medium mb-1">Goal / Habit</label>
-                    <input type="text" value={text} onChange={e => setText(e.target.value)} placeholder="e.g., Read 10 pages daily" className="w-full p-2 bg-light-bg dark:bg-dark-bg border rounded-lg" />
+                    <input type="text" value={text} onChange={e => setText(e.target.value)} placeholder="e.g., Read 10 pages daily" className="w-full p-2 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg" />
                 </div>
                 <div>
                     <label className="block text-sm font-medium mb-1">Type</label>
-                    <select value={type} onChange={e => setType(e.target.value as any)} className="w-full p-2 bg-light-bg dark:bg-dark-bg border rounded-lg">
+                    <select value={type} onChange={e => setType(e.target.value as any)} className="w-full p-2 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg">
                         <option value="habit">Daily Habit</option>
                         <option value="target">Measurable Goal</option>
                     </select>
@@ -86,11 +86,11 @@ const GoalModal: React.FC<{
                     <div className="p-3 bg-dark-bg rounded-lg">
                         <label className="block text-sm font-medium mb-2">Optional Target</label>
                         <div className="grid grid-cols-2 gap-4">
-                             <select value={targetType} onChange={e => setTargetType(e.target.value as any)} className="w-full p-2 bg-dark-border border-dark-border rounded-lg">
+                             <select value={targetType} onChange={e => setTargetType(e.target.value as any)} className="w-full p-2 bg-light-card dark:bg-dark-card border-light-border dark:border-dark-border rounded-lg">
                                 <option value="completions">Total Completions</option>
                                 <option value="streak">Streak</option>
                             </select>
-                             <input type="number" value={targetValue} onChange={e => setTargetValue(Number(e.target.value))} className="w-full p-2 bg-dark-border border-dark-border rounded-lg" />
+                             <input type="number" value={targetValue} onChange={e => setTargetValue(Number(e.target.value))} className="w-full p-2 bg-light-card dark:bg-dark-card border-light-border dark:border-dark-border rounded-lg" />
                         </div>
                     </div>
                 )}
@@ -99,15 +99,15 @@ const GoalModal: React.FC<{
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium mb-1">Current</label>
-                            <input type="number" value={currentValue} onChange={e => setCurrentValue(Number(e.target.value))} className="w-full p-2 bg-light-bg dark:bg-dark-bg border rounded-lg" />
+                            <input type="number" value={currentValue} onChange={e => setCurrentValue(Number(e.target.value))} className="w-full p-2 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg" />
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-1">Target</label>
-                            <input type="number" value={targetValue} onChange={e => setTargetValue(Number(e.target.value))} className="w-full p-2 bg-light-bg dark:bg-dark-bg border rounded-lg" />
+                            <input type="number" value={targetValue} onChange={e => setTargetValue(Number(e.target.value))} className="w-full p-2 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg" />
                         </div>
                         <div className="col-span-2">
                             <label className="block text-sm font-medium mb-1">Unit (optional)</label>
-                            <input type="text" value={unit} onChange={e => setUnit(e.target.value)} placeholder="e.g., $, books, kg" className="w-full p-2 bg-light-bg dark:bg-dark-bg border rounded-lg" />
+                            <input type="text" value={unit} onChange={e => setUnit(e.target.value)} placeholder="e.g., $, books, kg" className="w-full p-2 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg" />
                         </div>
                     </div>
                 )}
@@ -399,7 +399,7 @@ const Goals: React.FC = () => {
                                                             id="calendar-days-select"
                                                             value={calendarDays}
                                                             onChange={(e) => setCalendarDays(Number(e.target.value))}
-                                                            className="bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg p-1 focus:ring-2 focus:ring-primary focus:outline-none text-sm"
+                                                            className="bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg p-1 focus:ring-2 focus:ring-primary focus:outline-none text-sm"
                                                         >
                                                             <option value="7">7 Days</option>
                                                             <option value="14">14 Days</option>

@@ -10,6 +10,7 @@ import { db } from '../services/db.ts';
 import { exportData } from '../utils/data.ts';
 import { useNotifier } from '../contexts/NotificationContext.tsx';
 import { usePWA } from '../contexts/PWAContext.tsx';
+import UpdateNotification from '../components/UpdateNotification.tsx';
 
 const navLinks = [
     { to: 'home', text: 'Home', icon: HomeIcon },
@@ -179,6 +180,7 @@ const DashboardLayout: React.FC = () => {
             <GlobalSearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
             <OnboardingModal isOpen={showOnboarding} onClose={handleOnboardingClose} />
             <BackupReminderModal isOpen={showBackupReminder} onClose={handleRemindLater} onExport={handleBackupNow} />
+            <UpdateNotification />
         </div>
     );
 };

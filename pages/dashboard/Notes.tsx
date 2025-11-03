@@ -1,3 +1,5 @@
+
+
 import React, { useState, useMemo, useEffect, useContext, useCallback } from 'react';
 import { useIndexedDB } from '../../hooks/useIndexedDB.ts';
 import type { Note, Folder } from '../../types.ts';
@@ -10,11 +12,13 @@ import { useNotifier } from '../../contexts/NotificationContext.tsx';
 import TagInput from '../../components/TagInput.tsx';
 import RichTextEditor from '../../components/RichTextEditor.tsx';
 import { useLocation } from 'react-router-dom';
-// FIX: Switched to a namespace import for react-window to correctly access FixedSizeList.
+// FIX: Changed react-window import to a namespace import to resolve module resolution issue with FixedSizeList.
 import * as ReactWindow from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import ButtonSpinner from '../../components/ButtonSpinner.tsx';
 import { countWords } from '../../utils/text.ts';
+
+const { FixedSizeList } = ReactWindow;
 
 const useDebounce = <T,>(value: T, delay: number): T => {
     const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -87,7 +91,7 @@ const FolderManagerModal: React.FC<{
                         value={newFolderName}
                         onChange={e => setNewFolderName(e.target.value)}
                         placeholder="New folder name..."
-                        className="flex-1 p-2 bg-light-bg dark:bg-dark-bg border rounded-lg"
+                        className="flex-1 p-2 bg-light-card dark:bg-dark-card border rounded-lg"
                     />
                     <button type="submit" className="p-2 bg-primary text-white rounded-lg"><PlusIcon className="w-5 h-5" /></button>
                 </form>
@@ -349,7 +353,7 @@ const Notes: React.FC = () => {
                     </button>
                 </div>
                  <div className="p-2 border-b border-light-border dark:border-dark-border">
-                    <input type="text" placeholder="Search notes..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full p-3 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg" />
+                    <input type="text" placeholder="Search notes..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full p-3 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg" />
                 </div>
                  <div className="p-2 border-b border-light-border dark:border-dark-border">
                     <label htmlFor="folder-filter" className="sr-only">Filter by folder</label>
@@ -358,13 +362,13 @@ const Notes: React.FC = () => {
                             id="folder-filter"
                             value={selectedFolderId}
                             onChange={e => setSelectedFolderId(e.target.value)}
-                            className="flex-1 w-full p-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg"
+                            className="flex-1 w-full p-2 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg"
                         >
                             <option value="all">All Notes</option>
                             <option value="uncategorized">Uncategorized</option>
                             {noteFolders.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
                         </select>
-                        <button onClick={() => setIsFolderManagerOpen(true)} className="p-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg" aria-label="Manage folders">
+                        <button onClick={() => setIsFolderManagerOpen(true)} className="p-2 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg" aria-label="Manage folders">
                             <Cog6ToothIcon className="w-5 h-5" />
                         </button>
                     </div>
@@ -373,14 +377,14 @@ const Notes: React.FC = () => {
                     {isLoading ? <div className="p-4"><div className="flex justify-center items-center h-full"><Spinner /></div></div> : sortedNotes.length > 0 ? (
                         <AutoSizer>
                             {({ height, width }) => (
-                                <ReactWindow.FixedSizeList
+                                <FixedSizeList
                                     height={height}
                                     itemCount={sortedNotes.length}
                                     itemSize={65}
                                     width={width}
                                 >
                                     {NoteRow}
-                                </ReactWindow.FixedSizeList>
+                                </FixedSizeList>
                             )}
                         </AutoSizer>
                     ) : (

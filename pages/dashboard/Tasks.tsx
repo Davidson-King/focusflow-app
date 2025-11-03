@@ -1,3 +1,5 @@
+
+
 import React, { useState, useMemo, useContext, useEffect } from 'react';
 import { useIndexedDB } from '../../hooks/useIndexedDB.ts';
 import type { Task, Priority, Recurrence } from '../../types.ts';
@@ -10,9 +12,11 @@ import { useNotifier } from '../../contexts/NotificationContext.tsx';
 import { notificationService } from '../../services/notificationService.ts';
 import ButtonSpinner from '../../components/ButtonSpinner.tsx';
 import { useLocation } from 'react-router-dom';
-// FIX: Switched to a namespace import for react-window to correctly access FixedSizeList.
+// FIX: Changed react-window import to a namespace import to resolve module resolution issue with FixedSizeList.
 import * as ReactWindow from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
+
+const { FixedSizeList } = ReactWindow;
 
 const priorityMap: Record<Priority, { label: string; color: string; bg: string }> = {
     3: { label: 'High', color: 'text-red-400', bg: 'bg-red-400/10' },
@@ -23,7 +27,7 @@ const priorityMap: Record<Priority, { label: string; color: string; bg: string }
 
 const PrioritySelector: React.FC<{ value: Priority; onChange: (p: Priority) => void; }> = ({ value, onChange }) => {
     return (
-        <select value={value} onChange={e => onChange(Number(e.target.value) as Priority)} aria-label="Task priority" className="bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg p-2 focus:ring-2 focus:ring-primary focus:outline-none text-sm">
+        <select value={value} onChange={e => onChange(Number(e.target.value) as Priority)} aria-label="Task priority" className="bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg p-2 focus:ring-2 focus:ring-primary focus:outline-none text-sm">
             {Object.entries(priorityMap).reverse().map(([p, { label }]) => (
                 <option key={p} value={p}>{label}</option>
             ))}
@@ -72,16 +76,16 @@ const AddTaskForm: React.FC<{
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 placeholder={isSubtask ? "Add a new sub-task..." : "Add a new task..."}
-                className="w-full p-3 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-primary focus:outline-none mb-2"
+                className="w-full p-3 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-primary focus:outline-none mb-2"
                 aria-label={isSubtask ? "New sub-task name" : "New task name"}
                 autoFocus={shouldFocus}
             />
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 flex-wrap">
-                    <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} aria-label="Due date" className="bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-md p-1 text-sm focus:ring-1 focus:ring-primary focus:outline-none" />
+                    <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} aria-label="Due date" className="bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-md p-1 text-sm focus:ring-1 focus:ring-primary focus:outline-none" />
                     <PrioritySelector value={priority} onChange={setPriority} />
                     {dueDate && (
-                        <select value={recurrence} onChange={e => setRecurrence(e.target.value as any)} aria-label="Task recurrence" className="bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg p-2 focus:ring-2 focus:ring-primary focus:outline-none text-sm">
+                        <select value={recurrence} onChange={e => setRecurrence(e.target.value as any)} aria-label="Task recurrence" className="bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg p-2 focus:ring-2 focus:ring-primary focus:outline-none text-sm">
                             <option value="none">No Repeat</option>
                             <option value="daily">Daily</option>
                             <option value="weekly">Weekly</option>
@@ -185,13 +189,13 @@ const TaskItem: React.FC<{
     if (isEditing) {
         return (
              <div className="p-3 bg-light-card dark:bg-dark-card border-2 border-primary rounded-lg" style={{ marginLeft: `${level * 1.75}rem` }}>
-                <input type="text" value={editText} onChange={e => setEditText(e.target.value)} className="w-full bg-light-bg dark:bg-dark-bg p-2 rounded-md focus:outline-none mb-2" autoFocus />
+                <input type="text" value={editText} onChange={e => setEditText(e.target.value)} className="w-full bg-light-card dark:bg-dark-card p-2 rounded-md focus:outline-none mb-2" autoFocus />
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 flex-wrap">
-                        <input type="date" value={editDueDate} onChange={e => setEditDueDate(e.target.value)} aria-label="Due date" className="bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-md p-1 text-sm focus:ring-1 focus:ring-primary focus:outline-none" />
+                        <input type="date" value={editDueDate} onChange={e => setEditDueDate(e.target.value)} aria-label="Due date" className="bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-md p-1 text-sm focus:ring-1 focus:ring-primary focus:outline-none" />
                         <PrioritySelector value={editPriority} onChange={setEditPriority} />
                         {editDueDate && (
-                            <select value={editRecurrence} onChange={e => setEditRecurrence(e.target.value as any)} aria-label="Task recurrence" className="bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg p-2 focus:ring-2 focus:ring-primary focus:outline-none text-sm">
+                            <select value={editRecurrence} onChange={e => setEditRecurrence(e.target.value as any)} aria-label="Task recurrence" className="bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg p-2 focus:ring-2 focus:ring-primary focus:outline-none text-sm">
                                 <option value="none">No Repeat</option>
                                 <option value="daily">Daily</option>
                                 <option value="weekly">Weekly</option>
@@ -336,7 +340,7 @@ const TaskControls: React.FC<{
             </div>
              <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-dark-text-secondary">Sort by</span>
-                <select value={sortBy} onChange={e => onSortChange(e.target.value)} aria-label="Sort tasks" className="bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg p-2 focus:ring-2 focus:ring-primary focus:outline-none text-sm">
+                <select value={sortBy} onChange={e => onSortChange(e.target.value)} aria-label="Sort tasks" className="bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg p-2 focus:ring-2 focus:ring-primary focus:outline-none text-sm">
                     <option value="newest">Newest</option>
                     <option value="priority-desc">Priority: High-Low</option>
                     <option value="priority-asc">Priority: Low-High</option>
@@ -542,14 +546,14 @@ const Tasks: React.FC = () => {
                      <div className="h-[calc(100vh-26rem)]">
                         <AutoSizer>
                             {({ height, width }) => (
-                                <ReactWindow.FixedSizeList
+                                <FixedSizeList
                                     height={height}
                                     itemCount={flatTaskList.length}
                                     itemSize={80} // Adjust based on TaskItem height
                                     width={width}
                                 >
                                     {TaskRow}
-                                </ReactWindow.FixedSizeList>
+                                </FixedSizeList>
                             )}
                         </AutoSizer>
                     </div>

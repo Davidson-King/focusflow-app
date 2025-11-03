@@ -100,7 +100,7 @@ const GlobalSearchModal: React.FC<{ isOpen: boolean; onClose: () => void; }> = (
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         placeholder="Search tasks, notes, goals..."
-                        className="w-full p-3 pl-10 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg"
+                        className="w-full p-3 pl-10 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg"
                         autoFocus
                     />
                 </div>

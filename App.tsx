@@ -8,6 +8,7 @@ import { NotificationProvider } from './contexts/NotificationContext.tsx';
 import { DataProvider } from './contexts/DataContext.tsx';
 import { OfflineProvider } from './contexts/OfflineContext.tsx';
 import { PWAProvider } from './contexts/PWAContext.tsx';
+import { ServiceWorkerProvider } from './contexts/ServiceWorkerContext.tsx';
 
 import LandingPage from './pages/LandingPage.tsx';
 import DashboardLayout from './pages/DashboardLayout.tsx';
@@ -83,42 +84,44 @@ const App: React.FC = () => {
 
     return (
         <ErrorBoundary>
-            <ThemeProvider>
-                <NotificationProvider>
-                    <DataProvider>
-                        <AuthProvider>
-                            <OfflineProvider>
-                                <HashRouter>
-                                    <Routes>
-                                        <Route path="/" element={<LandingPage />} />
-                                        <Route path="/privacy" element={<PrivacyPolicy />} />
-                                        <Route path="/terms" element={<TermsOfService />} />
-                                        <Route path="/faq" element={<FAQ />} />
-                                        <Route path="/dashboard" element={<PWAProvider><DashboardLayout /></PWAProvider>}>
-                                            <Route index element={<Navigate to="home" replace />} />
-                                            <Route path="home" element={<Home />} />
-                                            <Route path="tasks" element={<Tasks />} />
-                                            <Route path="notes" element={<Notes />} />
-                                            <Route path="journal" element={<Journal />} />
-                                            <Route path="goals" element={<Goals />} />
-                                            <Route path="timeline" element={<Timeline />} />
-                                            <Route path="calendar" element={<Calendar />} />
-                                            <Route path="review" element={<WeeklyReview />} />
-                                            <Route path="achievements" element={<Achievements />} />
-                                            <Route path="settings" element={<Settings />} />
-                                            <Route path="help" element={<Help />} />
-                                            <Route path="support" element={<Support />} />
-                                            <Route path="contact" element={<Contact />} />
-                                        </Route>
-                                        <Route path="/tests" element={<TestRunner />} />
-                                        <Route path="*" element={<Navigate to="/" />} />
-                                    </Routes>
-                                </HashRouter>
-                            </OfflineProvider>
-                        </AuthProvider>
-                    </DataProvider>
-                </NotificationProvider>
-            </ThemeProvider>
+            <ServiceWorkerProvider>
+                <ThemeProvider>
+                    <NotificationProvider>
+                        <DataProvider>
+                            <AuthProvider>
+                                <OfflineProvider>
+                                    <HashRouter>
+                                        <Routes>
+                                            <Route path="/" element={<LandingPage />} />
+                                            <Route path="/privacy" element={<PrivacyPolicy />} />
+                                            <Route path="/terms" element={<TermsOfService />} />
+                                            <Route path="/faq" element={<FAQ />} />
+                                            <Route path="/dashboard" element={<PWAProvider><DashboardLayout /></PWAProvider>}>
+                                                <Route index element={<Navigate to="home" replace />} />
+                                                <Route path="home" element={<Home />} />
+                                                <Route path="tasks" element={<Tasks />} />
+                                                <Route path="notes" element={<Notes />} />
+                                                <Route path="journal" element={<Journal />} />
+                                                <Route path="goals" element={<Goals />} />
+                                                <Route path="timeline" element={<Timeline />} />
+                                                <Route path="calendar" element={<Calendar />} />
+                                                <Route path="review" element={<WeeklyReview />} />
+                                                <Route path="achievements" element={<Achievements />} />
+                                                <Route path="settings" element={<Settings />} />
+                                                <Route path="help" element={<Help />} />
+                                                <Route path="support" element={<Support />} />
+                                                <Route path="contact" element={<Contact />} />
+                                            </Route>
+                                            <Route path="/tests" element={<TestRunner />} />
+                                            <Route path="*" element={<Navigate to="/" />} />
+                                        </Routes>
+                                    </HashRouter>
+                                </OfflineProvider>
+                            </AuthProvider>
+                        </DataProvider>
+                    </NotificationProvider>
+                </ThemeProvider>
+            </ServiceWorkerProvider>
         </ErrorBoundary>
     );
 };
