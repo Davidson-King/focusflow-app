@@ -12,13 +12,11 @@ import { useNotifier } from '../../contexts/NotificationContext.tsx';
 import TagInput from '../../components/TagInput.tsx';
 import RichTextEditor from '../../components/RichTextEditor.tsx';
 import { useLocation } from 'react-router-dom';
-// FIX: Changed react-window import to a namespace import to resolve module resolution issue with FixedSizeList.
-import * as ReactWindow from 'react-window';
+// FIX: Use a named import for 'FixedSizeList' from 'react-window' to resolve the property does not exist error.
+import { FixedSizeList } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import ButtonSpinner from '../../components/ButtonSpinner.tsx';
 import { countWords } from '../../utils/text.ts';
-
-const { FixedSizeList } = ReactWindow;
 
 const useDebounce = <T,>(value: T, delay: number): T => {
     const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -146,12 +144,14 @@ const NoteEditor: React.FC<{
     }, [debouncedContentForWordCount]);
 
     useEffect(() => {
+        // Only reset the editor state when the note ID changes, not on every re-render.
+        // This prevents the cursor jump during auto-save.
         setTitle(note.title);
         setContent(note.content);
         setTags(note.tags || []);
         setSaveStatus('saved');
         setWordCount(countWords(note.content));
-    }, [note]);
+    }, [note.id]);
     
     const handleAutoSave = useCallback(async (updates: Partial<Note>) => {
         if(saveStatus === 'saved') return;
@@ -182,10 +182,17 @@ const NoteEditor: React.FC<{
                     className="w-full bg-light-card dark:bg-dark-card p-2 -mx-2 rounded-lg text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-primary"
                     aria-label="Note Title"
                 />
-                 <div className="mt-2 flex items-center justify-between gap-4">
-                    <div className="flex-1">
-                        <TagInput tags={tags} onChange={(newTags) => { setTags(newTags); setSaveStatus('unsaved'); }} />
-                    </div>
+            </div>
+            <div className="flex-1 overflow-y-auto rich-text-editor">
+                 <div className="max-w-4xl mx-auto h-full p-4 md:p-6">
+                    <RichTextEditor value={content} onChange={(newContent) => { setContent(newContent); setSaveStatus('unsaved'); }} ariaLabel="Note content editor" placeholder="Start writing your note here..." />
+                 </div>
+            </div>
+            <div className="p-2 border-t border-light-border dark:border-dark-border">
+                <div className="px-2">
+                    <TagInput tags={tags} onChange={(newTags) => { setTags(newTags); setSaveStatus('unsaved'); }} />
+                </div>
+                 <div className="p-2 flex justify-between items-center gap-4">
                     <div className="flex items-center gap-1 text-sm text-dark-text-secondary">
                         <FolderIcon className="w-4 h-4" aria-hidden="true" />
                         <select
@@ -204,24 +211,17 @@ const NoteEditor: React.FC<{
                             ))}
                         </select>
                     </div>
-                </div>
-            </div>
-            <div className="flex-1 overflow-y-auto rich-text-editor">
-                 <div className="max-w-4xl mx-auto h-full p-4 md:p-6">
-                    <RichTextEditor value={content} onChange={(newContent) => { setContent(newContent); setSaveStatus('unsaved'); }} ariaLabel="Note content editor"/>
-                 </div>
-            </div>
-            <div className="p-2 border-t border-light-border dark:border-dark-border flex justify-between items-center gap-4">
-                <span className="text-sm text-dark-text-secondary">{wordCount} words</span>
-                <div className="flex items-center gap-4">
-                    <span className="text-sm text-dark-text-secondary italic">
-                        {saveStatus === 'saving' && 'Saving...'}
-                        {saveStatus === 'saved' && 'All changes saved'}
-                        {saveStatus === 'unsaved' && 'Unsaved changes'}
-                    </span>
-                    <button onClick={() => onDeleteRequest(note)} aria-label={`Delete note: ${note.title}`} className="p-2 text-dark-text-secondary hover:text-red-500 rounded-lg hover:bg-red-500/10">
-                        <TrashIcon className="w-5 h-5" />
-                    </button>
+                     <div className="flex items-center gap-4">
+                        <span className="text-sm text-dark-text-secondary">{wordCount} words</span>
+                        <span className="text-sm text-dark-text-secondary italic">
+                            {saveStatus === 'saving' && 'Saving...'}
+                            {saveStatus === 'saved' && 'All changes saved'}
+                            {saveStatus === 'unsaved' && 'Unsaved changes'}
+                        </span>
+                        <button onClick={() => onDeleteRequest(note)} aria-label="Delete note" className="p-2 text-dark-text-secondary hover:text-red-500 rounded-lg hover:bg-red-500/10">
+                            <TrashIcon className="w-5 h-5" />
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -255,19 +255,18 @@ const Notes: React.FC = () => {
             if (selectedFolderId !== 'all' && selectedFolderId !== 'uncategorized' && note.folderId !== selectedFolderId) {
                 return false;
             }
-
+            
             // Search term filtering
             if (debouncedSearchTerm) {
-                const titleMatch = note.title.toLowerCase().includes(lowerCaseQuery);
-                const tagMatch = note.tags?.some(tag => tag.toLowerCase().includes(lowerCaseQuery));
-                if (!titleMatch && !tagMatch) {
+                const hasTagMatch = note.tags?.some(tag => tag.toLowerCase().includes(lowerCaseQuery));
+                if (!note.title.toLowerCase().includes(lowerCaseQuery) && !hasTagMatch) {
                     return false;
                 }
             }
             
             return true;
         });
-
+        
         return filtered.sort((a, b) => (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt));
     }, [allNotes, debouncedSearchTerm, selectedFolderId]);
     
@@ -288,13 +287,13 @@ const Notes: React.FC = () => {
     const handleAddNote = async () => {
         if (!user) return;
         try {
-            const newNoteData = { 
+            const newNoteData = {
                 user_id: user.id,
                 title: 'Untitled Note',
                 content: '',
                 tags: [],
                 folderId: (selectedFolderId !== 'all' && selectedFolderId !== 'uncategorized') ? selectedFolderId : null,
-                createdAt: Date.now()
+                createdAt: Date.now(),
             };
             const newNote = await addItem(newNoteData);
             setSelectedNoteId(newNote.id);
@@ -306,12 +305,12 @@ const Notes: React.FC = () => {
     const confirmDelete = async () => {
         if (!noteToDelete || isDeleting) return;
         setIsDeleting(true);
-
+        
         const element = document.getElementById(`note-row-${noteToDelete.id}`);
         if (element) {
             element.classList.add('animate-item-out');
         }
-        
+
         setTimeout(async () => {
             try {
                 await deleteItem(noteToDelete.id);
@@ -321,7 +320,7 @@ const Notes: React.FC = () => {
                     setSelectedNoteId(sortedNotes.length > 1 ? sortedNotes[Math.max(0, newSelectionIndex)].id : null);
                 }
             } catch (error) {
-                addNotification('Failed to delete note. Please check your connection and try again.', 'error');
+                addNotification('Failed to delete note. Please try again.', 'error');
             } finally {
                 setNoteToDelete(null);
                 setIsDeleting(false);
@@ -353,7 +352,7 @@ const Notes: React.FC = () => {
                     </button>
                 </div>
                  <div className="p-2 border-b border-light-border dark:border-dark-border">
-                    <input type="text" placeholder="Search notes..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full p-3 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg" />
+                    <input type="text" placeholder="Search notes or #tags" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full p-3 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg" />
                 </div>
                  <div className="p-2 border-b border-light-border dark:border-dark-border">
                     <label htmlFor="folder-filter" className="sr-only">Filter by folder</label>
@@ -398,8 +397,9 @@ const Notes: React.FC = () => {
                 ) : (
                     <div className="h-full flex items-center justify-center">
                         <EmptyState 
-                            title={allNotes.length > 0 ? "No Note Selected" : "Capture Your First Idea"}
-                            message={allNotes.length > 0 ? "Select a note from the list to view it." : "Create your first note and get your thoughts down."}
+                            title={allNotes.length > 0 ? "No Note Selected" : "Capture Your Ideas"}
+                            message={allNotes.length > 0 ? "Select a note from the list to begin." : "Create your first note to capture your thoughts, ideas, and inspiration."}
+                            icon={<PencilIcon className="w-12 h-12" />}
                             actionText="Create a New Note"
                             onAction={handleAddNote}
                         />
