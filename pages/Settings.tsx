@@ -1,6 +1,4 @@
-
-
-import React, { useContext, useState, useEffect, useCallback, useRef } from 'react';
+﻿import React, { useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { ThemeContext } from '../contexts/ThemeContext.tsx';
 import { AuthContext } from '../contexts/AuthContext.tsx';
 import { themes } from '../constants/themes.ts';
@@ -8,7 +6,6 @@ import { useNotifier } from '../contexts/NotificationContext.tsx';
 import { db } from '../services/db.ts';
 import ButtonSpinner from '../components/ButtonSpinner.tsx';
 import { SunIcon, MoonIcon, CloudArrowDownIcon, CheckCircleIcon } from '../components/Icons.tsx';
-import ImportConfirmationModal from '../components/ImportConfirmationModal.tsx';
 import PreImportWarningModal from '../components/PreImportWarningModal.tsx';
 import { fileToBase64, resizeImage } from '../utils/image.ts';
 import { useDataVersion } from '../contexts/DataContext.tsx';
@@ -42,13 +39,13 @@ const showImportOverlay = (status: 'importing' | 'reloading' | 'error', message?
 
     switch(status) {
         case 'importing':
-            titleText = 'Merging Data...';
+            titleText = 'Importing Data...';
             messageText = 'Please do not close this page.';
             overlay.innerHTML = `<h1 style="font-size: 2rem; font-weight: 700;">${titleText}</h1><p style="margin-top: 1rem;">${messageText}</p>${spinnerHTML}`;
             break;
         case 'reloading':
-            titleText = 'Merge Successful';
-            messageText = 'Updating application...';
+            titleText = 'Import Successful';
+            messageText = 'Reloading application...';
             overlay.innerHTML = `<h1 style="font-size: 2rem; font-weight: 700;">${titleText}</h1><p style="margin-top: 1rem;">${messageText}</p>${spinnerHTML}`;
             break;
         case 'error':
@@ -78,27 +75,24 @@ const validateBackupData = (data: any): boolean => {
     }
 
     const requiredStores: Record<string, 'array' | 'keyvalue'> = {
-        tasks: 'array',
-        notes: 'array',
-        journal: 'array',
-        goals: 'array',
-        timelines: 'array',
-        folders: 'array',
-        achievements: 'array',
-        userProfile: 'keyvalue',
-        settings: 'keyvalue'
+        tasks: 'array', notes: 'array', journal: 'array', goals: 'array',
+        timelines: 'array', folders: 'array', userProfile: 'keyvalue', settings: 'keyvalue'
     };
 
     for (const storeName in requiredStores) {
         if (!(storeName in data)) {
             throw new Error(`Corrupted backup file. Missing required data store: '${storeName}'. This does not appear to be a FocusFlow backup.`);
         }
+    }
+
+    for (const storeName in data) {
+        if (!data.hasOwnProperty(storeName)) continue;
+        
         const storeData = data[storeName];
         if (!Array.isArray(storeData)) {
              throw new Error(`Corrupted backup file. Data for '${storeName}' is not in the correct format.`);
         }
         
-        // Basic schema check for an item in each store
         if (storeData.length > 0) {
             const item = storeData[0];
             if (typeof item !== 'object' || item === null) {
@@ -118,7 +112,6 @@ const validateBackupData = (data: any): boolean => {
     return true;
 }
 
-
 const Settings: React.FC = () => {
     const { mode, toggleMode, colorTheme, setColorTheme } = useContext(ThemeContext);
     const { user, updateUser } = useContext(AuthContext);
@@ -128,7 +121,6 @@ const Settings: React.FC = () => {
     
     const [name, setName] = useState(user?.name || '');
     const [isPreImportModalOpen, setIsPreImportModalOpen] = useState(false);
-    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [importFile, setImportFile] = useState<File | null>(null);
     const importInputRef = React.useRef<HTMLInputElement>(null);
     const avatarInputRef = React.useRef<HTMLInputElement>(null);
@@ -143,12 +135,6 @@ const Settings: React.FC = () => {
             if (freq !== undefined) setExportReminderFreq(freq);
         });
     }, [user]);
-
-    useEffect(() => {
-        if (importFile) {
-            setIsImportModalOpen(true);
-        }
-    }, [importFile]);
 
     const handleNameUpdate = async () => {
         if (user && name.trim() && name !== user.name) {
@@ -175,9 +161,7 @@ const Settings: React.FC = () => {
             addNotification('Failed to update profile picture.', 'error');
             console.error(error);
         } finally {
-            if (e.target) {
-                e.target.value = '';
-            }
+            if (e.target) e.target.value = '';
         }
     };
 
@@ -194,16 +178,23 @@ const Settings: React.FC = () => {
             addNotification('Failed to export data. Please try again.', 'error');
         }
     };
+    
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0] || null;
+        setImportFile(file);
+        if (file) {
+            handleConfirmImport(file);
+        }
+    };
 
     const handleProceedToImport = () => {
         setIsPreImportModalOpen(false);
         importInputRef.current?.click();
     };
 
-    const handleConfirmImport = useCallback(() => {
-        if (!importFile) return;
+    const handleConfirmImport = useCallback((file: File) => {
+        if (!file) return;
         
-        setIsImportModalOpen(false);
         showImportOverlay('importing');
     
         const reader = new FileReader();
@@ -220,19 +211,15 @@ const Settings: React.FC = () => {
                 }
 
                 validateBackupData(data);
-
-                // FIX: Explicitly type store names to match the DB schema keys.
-                const allStores: ('tasks' | 'notes' | 'journal' | 'goals' | 'timelines' | 'folders' | 'userProfile' | 'settings' | 'achievements')[] = ['tasks', 'notes', 'journal', 'goals', 'timelines', 'folders', 'userProfile', 'settings', 'achievements'];
+                const allStores: ('tasks' | 'notes' | 'journal' | 'goals' | 'timelines' | 'folders' | 'userProfile' | 'settings' | 'milestones' | 'achievements')[] = ['tasks', 'notes', 'journal', 'goals', 'timelines', 'folders', 'userProfile', 'settings', 'milestones', 'achievements'];
 
                 for (const storeName of allStores) {
                     if (data[storeName]) {
                         if (storeName === 'userProfile' || storeName === 'settings') {
-                            // Handle key-value stores
                             for (const item of data[storeName]) {
                                 await db.put(storeName, item.value, item.key);
                             }
                         } else {
-                            // Handle object stores with keyPath 'id'
                             await db.putAll(storeName, data[storeName]);
                         }
                     }
@@ -241,27 +228,21 @@ const Settings: React.FC = () => {
                 showImportOverlay('reloading');
                 incrementDataVersion();
                 
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1500);
+                setTimeout(() => window.location.reload(), 1500);
 
             } catch (error: any) {
                 console.error("Import failed:", error);
                 showImportOverlay('error', error.message);
             } finally {
                 setImportFile(null);
-                if (importInputRef.current) {
-                    importInputRef.current.value = '';
-                }
+                if (importInputRef.current) importInputRef.current.value = '';
             }
         };
         
-        reader.onerror = () => {
-             showImportOverlay('error', 'Failed to read the file.');
-        };
+        reader.onerror = () => showImportOverlay('error', 'Failed to read the file.');
     
-        reader.readAsText(importFile);
-    }, [importFile, incrementDataVersion]);
+        reader.readAsText(file);
+    }, [incrementDataVersion]);
     
      const updateReminderFrequency = (freq: number) => {
         setExportReminderFreq(freq);
@@ -288,7 +269,7 @@ const Settings: React.FC = () => {
                         <div className="flex-1 w-full">
                             <label htmlFor="user-name" className="block text-sm font-medium text-dark-text-secondary">Name</label>
                             <div className="mt-1 flex gap-2">
-                                <input id="user-name" type="text" value={name} onChange={e => setName(e.target.value)} onBlur={handleNameUpdate} className="flex-1 p-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg" />
+                                <input id="user-name" type="text" value={name} onChange={e => setName(e.target.value)} onBlur={handleNameUpdate} className="flex-1 p-2 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg" />
                                 <button onClick={handleNameUpdate} disabled={isSavingName} className="px-4 py-2 bg-primary text-white rounded-lg w-24 h-10 flex justify-center items-center">
                                     {isSavingName ? <ButtonSpinner/> : 'Save'}
                                 </button>
@@ -350,12 +331,12 @@ const Settings: React.FC = () => {
                     <p className="text-sm text-dark-text-secondary mb-4">Your data is stored locally on this device. We recommend exporting it regularly as a backup.</p>
                     <div className="flex flex-col sm:flex-row gap-4">
                         <button onClick={handleExportData} className="flex-1 px-4 py-3 bg-primary text-white rounded-lg font-semibold">Export Data</button>
-                        <input type="file" ref={importInputRef} accept=".json" onChange={e => setImportFile(e.target.files?.[0] || null)} className="hidden"/>
+                        <input type="file" ref={importInputRef} accept=".json" onChange={handleFileSelect} className="hidden"/>
                         <button onClick={() => setIsPreImportModalOpen(true)} className="flex-1 px-4 py-3 bg-light-bg dark:bg-dark-border rounded-lg font-semibold">Import Data</button>
                     </div>
                      <div className="mt-4">
                         <label htmlFor="reminder-freq" className="block text-sm font-medium text-dark-text-secondary">Backup Reminder Frequency</label>
-                        <select id="reminder-freq" value={exportReminderFreq} onChange={e => updateReminderFrequency(Number(e.target.value))} className="mt-1 w-full max-w-xs p-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg">
+                        <select id="reminder-freq" value={exportReminderFreq} onChange={e => updateReminderFrequency(Number(e.target.value))} className="mt-1 w-full max-w-xs p-2 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg">
                             <option value="7">Every 7 days</option>
                             <option value="14">Every 14 days</option>
                             <option value="30">Every 30 days</option>
@@ -369,13 +350,6 @@ const Settings: React.FC = () => {
                     onClose={() => setIsPreImportModalOpen(false)}
                     onProceed={handleProceedToImport}
                     onExport={handleExportData}
-                />
-                
-                <ImportConfirmationModal 
-                    isOpen={isImportModalOpen}
-                    onClose={() => setIsImportModalOpen(false)}
-                    onConfirm={handleConfirmImport}
-                    isImporting={false}
                 />
             </div>
         </div>

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { useServiceWorker } from '../contexts/ServiceWorkerContext.tsx';
 import { ArrowPathIcon } from './Icons.tsx';
 

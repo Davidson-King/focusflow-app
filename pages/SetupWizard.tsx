@@ -1,4 +1,4 @@
-import React, { useState, useContext, useRef } from 'react';
+﻿import React, { useState, useContext, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext.tsx';
 import { db } from '../services/db.ts';
@@ -62,7 +62,6 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ onFinish }) => {
             await db.put('settings', formData.useCase, 'userUseCase');
             await db.put('settings', formData.source, 'userSource');
             
-            // Call the onFinish prop to update the parent router's state.
             onFinish();
 
         } catch (error) {
@@ -81,7 +80,7 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ onFinish }) => {
                     <RocketLaunchIcon className="w-12 h-12 mx-auto text-primary" />
                     <h2 className="text-2xl font-bold">Welcome to FocusFlow!</h2>
                     <p className="text-dark-text-secondary">Let's get your dashboard set up. First, what should we call you?</p>
-                    <input type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="Enter your name..." className="w-full p-3 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg text-center text-light-text dark:text-dark-text" autoFocus />
+                    <input type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="Enter your name..." className="w-full p-3 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg text-center text-light-text dark:text-dark-text" autoFocus />
                 </>
             );
             case 2: return (
@@ -92,7 +91,7 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ onFinish }) => {
                     <div className="space-y-4 text-left">
                         <label className="block">
                             <span className="text-sm">What's your age range?</span>
-                            <select name="ageRange" value={formData.ageRange} onChange={handleInputChange} className="mt-1 w-full p-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg text-light-text dark:text-dark-text">
+                            <select name="ageRange" value={formData.ageRange} onChange={handleInputChange} className="mt-1 w-full p-2 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg text-light-text dark:text-dark-text">
                                 <option value="">Select an option...</option>
                                 <option value="under_18">Under 18</option>
                                 <option value="18_24">18-24</option>
@@ -103,7 +102,7 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ onFinish }) => {
                         </label>
                         <label className="block">
                             <span className="text-sm">What will you use FocusFlow for?</span>
-                            <select name="useCase" value={formData.useCase} onChange={handleInputChange} className="mt-1 w-full p-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg text-light-text dark:text-dark-text">
+                            <select name="useCase" value={formData.useCase} onChange={handleInputChange} className="mt-1 w-full p-2 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg text-light-text dark:text-dark-text">
                                 <option value="">Select an option...</option>
                                 <option value="work">Work & Professional</option>
                                 <option value="school">School & Studies</option>
@@ -114,7 +113,7 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ onFinish }) => {
                         </label>
                         <label className="block">
                              <span className="text-sm">How did you hear about us?</span>
-                             <select name="source" value={formData.source} onChange={handleInputChange} className="mt-1 w-full p-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg text-light-text dark:text-dark-text">
+                             <select name="source" value={formData.source} onChange={handleInputChange} className="mt-1 w-full p-2 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg text-light-text dark:text-dark-text">
                                 <option value="">Select an option...</option>
                                 <option value="social_media">Social Media (X, Instagram, etc.)</option>
                                 <option value="friend">Friend / Colleague</option>

@@ -1,6 +1,4 @@
-
-
-import React, { useState, useMemo, useEffect, useContext, useCallback } from 'react';
+﻿import React, { useState, useMemo, useEffect, useContext, useCallback } from 'react';
 import { useIndexedDB } from '../../hooks/useIndexedDB.ts';
 import type { JournalEntry, Folder } from '../../types.ts';
 import { PlusIcon, TrashIcon, BookOpenIcon, FolderIcon, PencilIcon, Cog6ToothIcon } from '../../components/Icons.tsx';
@@ -11,7 +9,6 @@ import { AuthContext } from '../../contexts/AuthContext.tsx';
 import { useNotifier } from '../../contexts/NotificationContext.tsx';
 import RichTextEditor from '../../components/RichTextEditor.tsx';
 import { useLocation } from 'react-router-dom';
-// FIX: Changed react-window import to a namespace import to resolve module resolution issue with FixedSizeList.
 import * as ReactWindow from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import ButtonSpinner from '../../components/ButtonSpinner.tsx';
@@ -39,7 +36,7 @@ const FolderManagerModal: React.FC<{
     updateEntry: (id: string, updates: Partial<JournalEntry>) => Promise<void>;
 }> = ({ isOpen, onClose, allEntries, updateEntry }) => {
     const { user } = useContext(AuthContext);
-    const { items: folders, addItem, updateItem, deleteItem } = useIndexedDB<Folder>('folders');
+    const { items: folders, addItem, updateItem, deleteItem, refreshItems } = useIndexedDB<Folder>('folders');
     const journalFolders = useMemo(() => folders.filter(f => f.type === 'journal'), [folders]);
     
     const [newFolderName, setNewFolderName] = useState('');
@@ -50,8 +47,18 @@ const FolderManagerModal: React.FC<{
     const handleAddFolder = async (e: React.FormEvent) => {
         e.preventDefault();
         if (newFolderName.trim() && user) {
-            await addItem({ user_id: user.id, name: newFolderName.trim(), type: 'journal', createdAt: Date.now() });
+            const tempId = `temp_${Date.now()}`;
+            const newFolder = { id: tempId, user_id: user.id, name: newFolderName.trim(), type: 'journal' as const, createdAt: Date.now() };
+            
             setNewFolderName('');
+            
+            try {
+                await addItem(newFolder);
+            } catch (error) {
+                addNotification('Failed to create folder.', 'error');
+            } finally {
+                refreshItems();
+            }
         }
     };
 
@@ -131,12 +138,11 @@ const JournalEditor: React.FC<{
     const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
     const { addNotification } = useNotifier();
 
-    const debouncedTitle = useDebounce(title, 500);
-    const debouncedContentForSave = useDebounce(content, 1000);
+    const debouncedTitle = useDebounce(title, 1500);
+    const debouncedContentForSave = useDebounce(content, 2000);
     
-    // Debounce word count calculation to prevent lag on large entries
     const [wordCount, setWordCount] = useState(() => countWords(entry.content));
-    const debouncedContentForWordCount = useDebounce(content, 250);
+    const debouncedContentForWordCount = useDebounce(content, 500);
 
     useEffect(() => {
         setWordCount(countWords(debouncedContentForWordCount));
@@ -162,10 +168,14 @@ const JournalEditor: React.FC<{
     }, [entry.id, onUpdate, saveStatus, addNotification]);
 
     useEffect(() => {
-        if(debouncedTitle !== entry.title || debouncedContentForSave !== entry.content) {
+        const hasTitleChanged = debouncedTitle !== entry.title;
+        const hasContentChanged = debouncedContentForSave !== entry.content;
+
+        if(hasTitleChanged || hasContentChanged) {
             handleAutoSave({ title: debouncedTitle, content: debouncedContentForSave, updatedAt: Date.now() });
         }
-    }, [debouncedTitle, debouncedContentForSave, entry, handleAutoSave]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [debouncedTitle, debouncedContentForSave]);
 
     return (
         <div className="flex flex-col h-full bg-light-card dark:bg-dark-card rounded-r-xl">
@@ -201,7 +211,7 @@ const JournalEditor: React.FC<{
             </div>
             <div className="flex-1 overflow-y-auto rich-text-editor">
                  <div className="max-w-4xl mx-auto h-full p-4 md:p-6">
-                    <RichTextEditor value={content} onChange={(newContent) => { setContent(newContent); setSaveStatus('unsaved'); }} ariaLabel="Journal content editor" placeholder="What's on your mind?" />
+                    <RichTextEditor value={content} onChange={(newContent) => { setContent(newContent); setSaveStatus('unsaved'); }} ariaLabel="Journal content editor" placeholder="What's on your mind?" allNotes={[]} />
                  </div>
             </div>
              <div className="p-2 border-t border-light-border dark:border-dark-border flex justify-between items-center gap-4">
@@ -241,7 +251,6 @@ const Journal: React.FC = () => {
         const lowerCaseQuery = debouncedSearchTerm.toLowerCase();
 
         const filtered = allEntries.filter(entry => {
-            // Folder filtering
             if (selectedFolderId === 'uncategorized' && entry.folderId) {
                 return false;
             }
@@ -249,7 +258,6 @@ const Journal: React.FC = () => {
                 return false;
             }
             
-            // Search term filtering
             if (debouncedSearchTerm) {
                 if (!entry.title.toLowerCase().includes(lowerCaseQuery)) {
                     return false;
@@ -259,7 +267,6 @@ const Journal: React.FC = () => {
             return true;
         });
         
-        // FIX: Ensure sorting works correctly by accessing required `createdAt` property.
         return filtered.sort((a, b) => (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt));
     }, [allEntries, debouncedSearchTerm, selectedFolderId]);
     
@@ -317,7 +324,7 @@ const Journal: React.FC = () => {
                 setEntryToDelete(null);
                 setIsDeleting(false);
             }
-        }, 300); // Animation duration
+        }, 300);
     };
     
     const selectedEntry = useMemo(() => allEntries.find(e => e.id === selectedEntryId), [allEntries, selectedEntryId]);
@@ -328,7 +335,6 @@ const Journal: React.FC = () => {
             <div id={`journal-row-${entry.id}`} style={style}>
                 <button onClick={() => setSelectedEntryId(entry.id)} className={`w-full h-full text-left p-4 border-b border-light-border dark:border-dark-border hover:bg-light-bg dark:hover:bg-dark-border ${selectedEntryId === entry.id ? 'bg-primary/10' : ''}`}>
                     <h3 className="font-semibold truncate">{entry.title}</h3>
-                    {/* FIX: Ensure createdAt is always present to prevent runtime errors. */}
                     <p className="text-xs text-light-text-secondary dark:text-dark-text-secondary truncate">{new Date(entry.updatedAt || entry.createdAt).toLocaleString()}</p>
                 </button>
             </div>
@@ -358,7 +364,7 @@ const Journal: React.FC = () => {
                         >
                             <option value="all">All Entries</option>
                             <option value="uncategorized">Uncategorized</option>
-                            {journalFolders.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                            {journalFolders.map(f => <option key={f.id} value={f.id}>{f.id === 'temp' ? 'Loading...' : f.name}</option>)}
                         </select>
                         <button onClick={() => setIsFolderManagerOpen(true)} className="p-2 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg" aria-label="Manage folders">
                             <Cog6ToothIcon className="w-5 h-5" />

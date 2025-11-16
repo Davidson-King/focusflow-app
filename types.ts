@@ -1,5 +1,4 @@
-
-export type Mode = 'light' | 'dark';
+﻿export type Mode = 'light' | 'dark';
 
 export interface ColorTheme {
     name: string;
@@ -63,6 +62,7 @@ export interface Note {
     folderId: string | null;
     createdAt: number;
     updatedAt?: number;
+    shareId?: string;
 }
 
 export interface JournalEntry {
@@ -124,9 +124,19 @@ export interface FeedbackOutboxItem {
     createdAt: number;
 }
 
-export interface Achievement {
+export interface Milestone {
     id: string; // e.g., 'task-master-1'
     name: string;
     description: string;
     achievedOn?: number; // timestamp
+}
+
+export interface Achievement {
+    id: string;
+    user_id: string;
+    title: string;
+    description: string;
+    date: string; // YYYY-MM-DD
+    createdAt: number;
+    updatedAt?: number;
 }

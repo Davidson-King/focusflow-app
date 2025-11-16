@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import Modal from './Modal.tsx';
 import ButtonSpinner from './ButtonSpinner.tsx';
 
@@ -12,7 +12,6 @@ interface ImportConfirmationModalProps {
 const ImportConfirmationModal: React.FC<ImportConfirmationModalProps> = ({ isOpen, onClose, onConfirm, isImporting }) => {
     const [confirmText, setConfirmText] = useState('');
 
-    // Reset text when modal opens
     React.useEffect(() => {
         if (isOpen) {
             setConfirmText('');

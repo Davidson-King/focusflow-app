@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import {
   SparklesIcon,
   CheckCircleIcon,
@@ -10,7 +10,7 @@ import {
   TrophyIcon,
 } from '../components/Icons';
 
-export type AchievementID =
+export type MilestoneID =
   | 'first-steps'
   | 'task-starter'
   | 'task-master'
@@ -21,14 +21,14 @@ export type AchievementID =
   | 'organizer'
   | 'goal-setter';
 
-export interface AchievementDefinition {
-  id: AchievementID;
+export interface MilestoneDefinition {
+  id: MilestoneID;
   name: string;
   description: string;
   icon: React.FC<React.SVGProps<SVGSVGElement>>;
 }
 
-export const ALL_ACHIEVEMENTS: Record<AchievementID, AchievementDefinition> = {
+export const ALL_MILESTONES: Record<MilestoneID, MilestoneDefinition> = {
   'first-steps': {
     id: 'first-steps',
     name: 'First Steps',
@@ -86,7 +86,7 @@ export const ALL_ACHIEVEMENTS: Record<AchievementID, AchievementDefinition> = {
 };
 
 // Provides a consistent order for display
-export const ACHIEVEMENT_ORDER: AchievementID[] = [
+export const MILESTONE_ORDER: MilestoneID[] = [
   'first-steps',
   'task-starter',
   'task-master',

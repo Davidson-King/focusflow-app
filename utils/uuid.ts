@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Generates a v4 UUID.
  * Provides a fallback for browsers that don't support `crypto.randomUUID()`.
  * The fallback is not cryptographically secure but is sufficient for generating unique IDs.

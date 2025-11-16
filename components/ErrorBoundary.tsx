@@ -1,6 +1,4 @@
-
-
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+﻿import React, { Component, ErrorInfo, ReactNode } from 'react';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -12,9 +10,7 @@ interface State {
 }
 
 class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
-  // FIX: The constructor-based state initialization was causing type errors in this environment.
-  // Switched to a class property initializer for state.
-  public state: State = {
+  state: State = {
     hasError: false,
     error: undefined,
   };
@@ -63,8 +59,6 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
         </div>
       );
     }
-
-    // FIX: Moved the return statement to be inside the render method. An Error Boundary must return its children if there is no error.
     return this.props.children;
   }
 }

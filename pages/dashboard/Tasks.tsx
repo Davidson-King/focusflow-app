@@ -1,6 +1,4 @@
-
-
-import React, { useState, useMemo, useContext, useEffect } from 'react';
+﻿import React, { useState, useMemo, useContext, useEffect } from 'react';
 import { useIndexedDB } from '../../hooks/useIndexedDB.ts';
 import type { Task, Priority, Recurrence } from '../../types.ts';
 import { PlusIcon, TrashIcon, PencilIcon, FlagIcon, ArrowUturnLeftIcon, ChevronDownIcon, CheckIcon, XIcon, CalendarIcon, ArrowPathIcon, CheckCircleIcon } from '../../components/Icons.tsx';
@@ -12,7 +10,6 @@ import { useNotifier } from '../../contexts/NotificationContext.tsx';
 import { notificationService } from '../../services/notificationService.ts';
 import ButtonSpinner from '../../components/ButtonSpinner.tsx';
 import { useLocation } from 'react-router-dom';
-// FIX: Changed react-window import to a namespace import to resolve module resolution issue with FixedSizeList.
 import * as ReactWindow from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 
@@ -35,7 +32,6 @@ const PrioritySelector: React.FC<{ value: Priority; onChange: (p: Priority) => v
     );
 };
 
-// FIX: Changed onAdd return type from Promise<void> to Promise<any> to match the return type of the passed handler.
 const AddTaskForm: React.FC<{
     onAdd: (task: Omit<Task, 'id' | 'user_id'>) => Promise<any>;
     parentId?: string | null;
@@ -66,7 +62,6 @@ const AddTaskForm: React.FC<{
         }
     };
     
-    // For the main add task form, we wrap it to provide spacing. For subtasks, it's borderless.
     const formContainerClass = isSubtask ? 'p-3 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg' : 'mb-6';
 
     return (
@@ -104,7 +99,6 @@ const AddTaskForm: React.FC<{
     );
 };
 
-// FIX: Changed onAddSubtask and onAddNextRecurring return types from Promise<void> to Promise<any> to match the passed handler.
 const TaskItem: React.FC<{
     task: Task;
     onUpdate: (id: string, updates: Partial<Task>, originalTask: Task) => Promise<void>;
@@ -309,7 +303,6 @@ const TaskControls: React.FC<{
     return (
         <div className="flex flex-wrap items-center justify-between gap-4 mb-4 p-3 bg-light-card dark:bg-dark-card rounded-lg border border-light-border dark:border-dark-border">
             <div className="flex items-center gap-x-6 gap-y-2 flex-wrap">
-                {/* Status Filter */}
                 <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-dark-text-secondary">Show</span>
                     {(['active', 'completed', 'all'] as const).map(filter => (
@@ -327,7 +320,6 @@ const TaskControls: React.FC<{
                     ))}
                 </div>
 
-                {/* Priority Filter */}
                 <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-dark-text-secondary">Priority</span>
                     {[3, 2, 1].map(p => (
@@ -430,7 +422,7 @@ const Tasks: React.FC = () => {
                 setTaskToDelete(null);
                 setIsDeleting(false);
             }
-        }, 300); // Wait for animation
+        }, 300);
     };
 
     const { flatTaskList, taskMap } = useMemo(() => {
@@ -549,7 +541,7 @@ const Tasks: React.FC = () => {
                                 <FixedSizeList
                                     height={height}
                                     itemCount={flatTaskList.length}
-                                    itemSize={80} // Adjust based on TaskItem height
+                                    itemSize={80}
                                     width={width}
                                 >
                                     {TaskRow}
@@ -585,5 +577,5 @@ const Tasks: React.FC = () => {
         </div>
     );
 };
-// FIX: Added a default export for the Tasks component.
+
 export default Tasks;

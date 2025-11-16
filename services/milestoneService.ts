@@ -1,5 +1,5 @@
-import type { Task, Note, JournalEntry, Folder, Goal, Achievement } from '../types';
-import { AchievementID } from '../constants/achievements';
+﻿import type { Task, Note, JournalEntry, Folder, Goal, Milestone } from '../types';
+import { MilestoneID } from '../constants/milestones';
 
 type DataSnapshot = {
   tasks: Task[];
@@ -9,13 +9,13 @@ type DataSnapshot = {
   goals: Goal[];
 };
 
-export const checkAchievements = (data: DataSnapshot, unlockedAchievements: Achievement[]): AchievementID[] => {
-  const unlockedIds = new Set(unlockedAchievements.map(a => a.id));
-  const newAchievements: AchievementID[] = [];
+export const checkMilestones = (data: DataSnapshot, unlockedMilestones: Milestone[]): MilestoneID[] => {
+  const unlockedIds = new Set(unlockedMilestones.map(a => a.id));
+  const newMilestones: MilestoneID[] = [];
 
-  const check = (id: AchievementID, condition: boolean) => {
+  const check = (id: MilestoneID, condition: boolean) => {
     if (!unlockedIds.has(id) && condition) {
-      newAchievements.push(id);
+      newMilestones.push(id);
     }
   };
 
@@ -29,7 +29,6 @@ export const checkAchievements = (data: DataSnapshot, unlockedAchievements: Achi
   check('diarist', data.journalEntries.length >= 10);
 
   // --- Consistency Milestones ---
-  // FIX: Use a type predicate to narrow the Goal type, allowing access to 'currentStreak'.
   const habits = data.goals.filter((g): g is Goal & { type: 'habit' } => g.type === 'habit');
   check('7-day-streak', habits.some(h => h.currentStreak >= 7));
   check('30-day-streak', habits.some(h => h.currentStreak >= 30));
@@ -38,5 +37,5 @@ export const checkAchievements = (data: DataSnapshot, unlockedAchievements: Achi
   check('organizer', data.folders.length >= 1);
   check('goal-setter', data.goals.some(g => g.type === 'target'));
 
-  return newAchievements;
+  return newMilestones;
 };

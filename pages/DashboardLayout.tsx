@@ -1,27 +1,27 @@
-
-import React, { useState, useContext, useEffect } from 'react';
+﻿import React, { useState, useContext, useEffect } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { HomeIcon, CheckCircleIcon, BookOpenIcon, DocumentTextIcon, TrophyIcon, MapIcon, CalendarIcon, AwardIcon, Cog6ToothIcon, QuestionMarkCircleIcon, HeartIcon, SearchIcon, Bars3Icon, PencilSquareIcon, XIcon, ArrowLeftOnRectangleIcon, ChartBarIcon, CloudArrowDownIcon } from '../components/Icons.tsx';
+import { HomeIcon, CheckCircleIcon, BookOpenIcon, DocumentTextIcon, MapIcon, CalendarIcon, AwardIcon, Cog6ToothIcon, QuestionMarkCircleIcon, HeartIcon, SearchIcon, Bars3Icon, PencilSquareIcon, XIcon, ArrowLeftOnRectangleIcon, ChartBarIcon, CloudArrowDownIcon, RocketLaunchIcon, TrophyIcon } from '../components/Icons.tsx';
 import { AuthContext } from '../contexts/AuthContext.tsx';
 import GlobalSearchModal from '../components/GlobalSearchModal.tsx';
-import OnboardingModal from '../components/OnboardingModal.tsx';
 import BackupReminderModal from '../components/BackupReminderModal.tsx';
 import { db } from '../services/db.ts';
 import { exportData } from '../utils/data.ts';
 import { useNotifier } from '../contexts/NotificationContext.tsx';
 import { usePWA } from '../contexts/PWAContext.tsx';
 import UpdateNotification from '../components/UpdateNotification.tsx';
+import { useMilestoneChecker } from '../hooks/useMilestoneChecker.ts';
 
 const navLinks = [
     { to: 'home', text: 'Home', icon: HomeIcon },
     { to: 'tasks', text: 'Tasks', icon: CheckCircleIcon },
     { to: 'notes', text: 'Notes', icon: BookOpenIcon },
     { to: 'journal', text: 'Journal', icon: DocumentTextIcon },
-    { to: 'goals', text: 'Goals', icon: TrophyIcon },
+    { to: 'goals', text: 'Goals', icon: RocketLaunchIcon },
     { to: 'timeline', text: 'Timeline', icon: MapIcon },
     { to: 'calendar', text: 'Calendar', icon: CalendarIcon },
     { to: 'review', text: 'Weekly Review', icon: ChartBarIcon },
-    { to: 'achievements', text: 'Achievements', icon: AwardIcon },
+    { to: 'achievements', text: 'Achievements', icon: TrophyIcon },
+    { to: 'milestones', text: 'Milestones', icon: AwardIcon },
 ];
 
 const bottomLinks = [
@@ -50,26 +50,17 @@ const DashboardLayout: React.FC = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [isEditLayout, setIsEditLayout] = useState(false);
-    const [showOnboarding, setShowOnboarding] = useState(false);
     const [showBackupReminder, setShowBackupReminder] = useState(false);
     const { installPromptEvent, isAppInstalled, triggerInstallPrompt } = usePWA();
     const { addNotification } = useNotifier();
 
+    useMilestoneChecker();
+
     useEffect(() => {
-        setIsSidebarOpen(false); // Close sidebar on navigation
+        setIsSidebarOpen(false);
     }, [location.pathname]);
 
     useEffect(() => {
-        // Check for onboarding status
-        const checkOnboarding = async () => {
-            const hasOnboarded = await db.get('settings', 'hasSeenOnboarding');
-            if (!hasOnboarded) {
-                setShowOnboarding(true);
-            }
-        };
-        checkOnboarding();
-
-        // Check for backup reminder
         const checkBackupReminder = async () => {
             const reminderFreq = await db.get('settings', 'exportReminderFrequency') ?? 30;
             if (reminderFreq === 0) return;
@@ -82,13 +73,7 @@ const DashboardLayout: React.FC = () => {
             }
         };
         checkBackupReminder();
-
     }, []);
-
-    const handleOnboardingClose = async () => {
-        await db.put('settings', true, 'hasSeenOnboarding');
-        setShowOnboarding(false);
-    };
     
     const handleBackupNow = async () => {
         const success = await exportData();
@@ -101,22 +86,17 @@ const DashboardLayout: React.FC = () => {
     };
 
     const handleRemindLater = async () => {
-        // For simplicity, just close it. A more robust solution might snooze it.
         setShowBackupReminder(false);
     };
 
     const handleLogout = () => {
-        // Set a flag in session storage to indicate a deliberate logout.
-        // This helps the app distinguish a logout-reload from a first-time visit.
         sessionStorage.setItem('focusflow_manual_logout', 'true');
-        // Full page reload to the landing page.
         window.location.assign('/');
     };
 
     return (
         <div className="flex h-screen bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text">
-            {/* Sidebar */}
-            <aside className={`absolute md:relative z-20 md:z-auto h-full w-64 bg-light-card dark:bg-dark-card border-r border-light-border dark:border-dark-border flex-shrink-0 flex flex-col p-4 transition-transform transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
+            <aside className={`absolute md:relative z-20 md:z-auto h-full w-64 bg-light-card dark:bg-dark-card border-r border-light-border dark:border-dark-border flex-shrink-0 flex flex-col p-4 transition-transform transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 sidebar-scrollbar`}>
                 <div className="flex justify-between items-center mb-6">
                      <h1 className="text-2xl font-bold text-primary">FocusFlow</h1>
                      <button className="md:hidden p-1" onClick={() => setIsSidebarOpen(false)}><XIcon className="w-6 h-6"/></button>
@@ -152,7 +132,6 @@ const DashboardLayout: React.FC = () => {
                 </div>
             </aside>
 
-            {/* Main Content */}
             <main className="flex-1 flex flex-col overflow-hidden">
                 <header className="flex-shrink-0 bg-light-card dark:bg-dark-card border-b border-light-border dark:border-dark-border p-4 flex justify-between items-center">
                     <button className="md:hidden p-1" onClick={() => setIsSidebarOpen(true)}>
@@ -178,7 +157,6 @@ const DashboardLayout: React.FC = () => {
                 </div>
             </main>
             <GlobalSearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
-            <OnboardingModal isOpen={showOnboarding} onClose={handleOnboardingClose} />
             <BackupReminderModal isOpen={showBackupReminder} onClose={handleRemindLater} onExport={handleBackupNow} />
             <UpdateNotification />
         </div>

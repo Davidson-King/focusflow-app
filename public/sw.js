@@ -1,4 +1,4 @@
-self.addEventListener('notificationclick', (event) => {
+﻿self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const urlToOpen = new URL('/#/dashboard/tasks', self.location.origin).href;
 
@@ -21,7 +21,7 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-const CACHE_NAME = 'focusflow-cache-v9'; // Increment version to trigger update
+const CACHE_NAME = 'focusflow-cache-v10'; // Increment version to trigger update
 const APP_SHELL_URLS = [
   '/',
   '/index.html',

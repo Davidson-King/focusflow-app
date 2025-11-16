@@ -1,4 +1,4 @@
-import { openDB, DBSchema, IDBPDatabase } from 'idb';
+﻿import { openDB, DBSchema, IDBPDatabase } from 'idb';
 
 // Define the schema of the database.
 interface FocusFlowDB extends DBSchema {
@@ -34,6 +34,10 @@ interface FocusFlowDB extends DBSchema {
         key: string;
         value: any;
     };
+    milestones: {
+        key: string;
+        value: any;
+    };
     achievements: {
         key: string;
         value: any;
@@ -46,16 +50,16 @@ interface FocusFlowDB extends DBSchema {
 
 // FIX: Explicitly define store names to prevent type widening from `keyof FocusFlowDB` to `string`.
 // This resolves issues with passing store names to the `idb` library methods.
-type StoreName = 'tasks' | 'notes' | 'journal' | 'goals' | 'timelines' | 'folders' | 'userProfile' | 'settings' | 'achievements' | 'feedback-outbox';
+type StoreName = 'tasks' | 'notes' | 'journal' | 'goals' | 'timelines' | 'folders' | 'userProfile' | 'settings' | 'milestones' | 'achievements' | 'feedback-outbox';
 
 let dbPromise: Promise<IDBPDatabase<FocusFlowDB>>;
 
 const initDB = () => {
     if (!dbPromise) {
-        dbPromise = openDB<FocusFlowDB>('FocusFlowDB', 3, {
+        dbPromise = openDB<FocusFlowDB>('FocusFlowDB', 4, {
             upgrade(db, oldVersion, newVersion, transaction) {
                 // FIX: Use the specific StoreName[] type to prevent type-widening issues with generics in the idb library.
-                const stores: StoreName[] = ['tasks', 'notes', 'journal', 'goals', 'timelines', 'folders', 'achievements', 'feedback-outbox'];
+                const stores: StoreName[] = ['tasks', 'notes', 'journal', 'goals', 'timelines', 'folders', 'milestones', 'feedback-outbox', 'achievements'];
 
                 for (const storeName of stores) {
                     if (!db.objectStoreNames.contains(storeName)) {
@@ -68,6 +72,20 @@ const initDB = () => {
                 }
                 if (!db.objectStoreNames.contains('settings')) {
                     db.createObjectStore('settings');
+                }
+
+                // Migration from v2 (achievements) to v3 (milestones)
+                if (oldVersion < 3 && db.objectStoreNames.contains('achievements') && newVersion >= 3) {
+                    // This is a placeholder for a more complex migration if needed.
+                    // For now, we just ensure the new store exists.
+                    // If we needed to move data, we would do it here.
+                    db.deleteObjectStore('achievements');
+                }
+
+                if(oldVersion < 4 && newVersion >= 4) {
+                    if (!db.objectStoreNames.contains('achievements')) {
+                        db.createObjectStore('achievements', { keyPath: 'id' });
+                    }
                 }
             },
         });

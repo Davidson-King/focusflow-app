@@ -1,9 +1,7 @@
-
-
-import React, { useState, useMemo, useEffect, useContext, useCallback } from 'react';
+﻿import React, { useState, useMemo, useEffect, useContext, useCallback } from 'react';
 import { useIndexedDB } from '../../hooks/useIndexedDB.ts';
 import type { Note, Folder } from '../../types.ts';
-import { PlusIcon, TrashIcon, FolderIcon, PencilIcon, Cog6ToothIcon } from '../../components/Icons.tsx';
+import { PlusIcon, TrashIcon, FolderIcon, PencilIcon, Cog6ToothIcon, ShareIcon, ClipboardIcon } from '../../components/Icons.tsx';
 import EmptyState from '../../components/EmptyState.tsx';
 import Spinner from '../../components/Spinner.tsx';
 import Modal from '../../components/Modal.tsx';
@@ -11,12 +9,14 @@ import { AuthContext } from '../../contexts/AuthContext.tsx';
 import { useNotifier } from '../../contexts/NotificationContext.tsx';
 import TagInput from '../../components/TagInput.tsx';
 import RichTextEditor from '../../components/RichTextEditor.tsx';
-import { useLocation } from 'react-router-dom';
-// FIX: Use a named import for 'FixedSizeList' from 'react-window' to resolve the property does not exist error.
-import { FixedSizeList } from 'react-window';
+import { useLocation, useNavigate } from 'react-router-dom';
+import * as ReactWindow from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import ButtonSpinner from '../../components/ButtonSpinner.tsx';
 import { countWords } from '../../utils/text.ts';
+import { generateUUID } from '../../utils/uuid.ts';
+
+const { FixedSizeList } = ReactWindow;
 
 const useDebounce = <T,>(value: T, delay: number): T => {
     const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -38,7 +38,7 @@ const FolderManagerModal: React.FC<{
     updateNote: (id: string, updates: Partial<Note>) => Promise<void>;
 }> = ({ isOpen, onClose, allNotes, updateNote }) => {
     const { user } = useContext(AuthContext);
-    const { items: folders, addItem, updateItem, deleteItem } = useIndexedDB<Folder>('folders');
+    const { items: folders, addItem, updateItem, deleteItem, refreshItems } = useIndexedDB<Folder>('folders');
     const noteFolders = useMemo(() => folders.filter(f => f.type === 'note'), [folders]);
     
     const [newFolderName, setNewFolderName] = useState('');
@@ -49,8 +49,18 @@ const FolderManagerModal: React.FC<{
     const handleAddFolder = async (e: React.FormEvent) => {
         e.preventDefault();
         if (newFolderName.trim() && user) {
-            await addItem({ user_id: user.id, name: newFolderName.trim(), type: 'note', createdAt: Date.now() });
+            const tempId = `temp_${Date.now()}`;
+            const newFolder = { id: tempId, user_id: user.id, name: newFolderName.trim(), type: 'note' as const, createdAt: Date.now() };
+            
             setNewFolderName('');
+            
+            try {
+                await addItem(newFolder);
+            } catch (error) {
+                addNotification('Failed to create folder.', 'error');
+            } finally {
+                refreshItems();
+            }
         }
     };
 
@@ -121,37 +131,36 @@ const FolderManagerModal: React.FC<{
 
 const NoteEditor: React.FC<{
     note: Note;
+    allNotes: Note[];
     folders: Folder[];
     onUpdate: (id: string, updates: Partial<Note>) => Promise<void>;
     onDeleteRequest: (note: Note) => void;
-}> = ({ note, folders, onUpdate, onDeleteRequest }) => {
+    onShareRequest: (note: Note) => void;
+}> = ({ note, allNotes, folders, onUpdate, onDeleteRequest, onShareRequest }) => {
     const [title, setTitle] = useState(note.title);
     const [content, setContent] = useState(note.content);
     const [tags, setTags] = useState(note.tags || []);
     const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
     const { addNotification } = useNotifier();
 
-    const debouncedTitle = useDebounce(title, 500);
-    const debouncedContentForSave = useDebounce(content, 1000);
-    const debouncedTags = useDebounce(tags, 500);
+    const debouncedTitle = useDebounce(title, 1500);
+    const debouncedContentForSave = useDebounce(content, 2000);
+    const debouncedTags = useDebounce(tags, 1500);
 
-    // Debounce word count calculation to prevent lag on large notes
     const [wordCount, setWordCount] = useState(() => countWords(note.content));
-    const debouncedContentForWordCount = useDebounce(content, 250);
+    const debouncedContentForWordCount = useDebounce(content, 500);
 
     useEffect(() => {
         setWordCount(countWords(debouncedContentForWordCount));
     }, [debouncedContentForWordCount]);
 
     useEffect(() => {
-        // Only reset the editor state when the note ID changes, not on every re-render.
-        // This prevents the cursor jump during auto-save.
         setTitle(note.title);
         setContent(note.content);
         setTags(note.tags || []);
         setSaveStatus('saved');
         setWordCount(countWords(note.content));
-    }, [note.id]);
+    }, [note]);
     
     const handleAutoSave = useCallback(async (updates: Partial<Note>) => {
         if(saveStatus === 'saved') return;
@@ -166,10 +175,15 @@ const NoteEditor: React.FC<{
     }, [note.id, onUpdate, saveStatus, addNotification]);
     
     useEffect(() => {
-        if(debouncedTitle !== note.title || debouncedTags !== note.tags || debouncedContentForSave !== note.content) {
+        const hasTitleChanged = debouncedTitle !== note.title;
+        const haveTagsChanged = JSON.stringify(debouncedTags) !== JSON.stringify(note.tags);
+        const hasContentChanged = debouncedContentForSave !== note.content;
+
+        if(hasTitleChanged || haveTagsChanged || hasContentChanged) {
             handleAutoSave({ title: debouncedTitle, content: debouncedContentForSave, tags: debouncedTags, updatedAt: Date.now() });
         }
-    }, [debouncedTitle, debouncedContentForSave, debouncedTags, note, handleAutoSave]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [debouncedTitle, debouncedContentForSave, debouncedTags]);
 
     return (
         <div className="flex flex-col h-full bg-light-card dark:bg-dark-card rounded-r-xl">
@@ -182,17 +196,10 @@ const NoteEditor: React.FC<{
                     className="w-full bg-light-card dark:bg-dark-card p-2 -mx-2 rounded-lg text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-primary"
                     aria-label="Note Title"
                 />
-            </div>
-            <div className="flex-1 overflow-y-auto rich-text-editor">
-                 <div className="max-w-4xl mx-auto h-full p-4 md:p-6">
-                    <RichTextEditor value={content} onChange={(newContent) => { setContent(newContent); setSaveStatus('unsaved'); }} ariaLabel="Note content editor" placeholder="Start writing your note here..." />
-                 </div>
-            </div>
-            <div className="p-2 border-t border-light-border dark:border-dark-border">
-                <div className="px-2">
-                    <TagInput tags={tags} onChange={(newTags) => { setTags(newTags); setSaveStatus('unsaved'); }} />
-                </div>
-                 <div className="p-2 flex justify-between items-center gap-4">
+                 <div className="mt-2 flex items-center justify-between gap-4">
+                    <div className="flex-1">
+                        <TagInput tags={tags} onChange={(newTags) => { setTags(newTags); setSaveStatus('unsaved'); }} />
+                    </div>
                     <div className="flex items-center gap-1 text-sm text-dark-text-secondary">
                         <FolderIcon className="w-4 h-4" aria-hidden="true" />
                         <select
@@ -211,22 +218,83 @@ const NoteEditor: React.FC<{
                             ))}
                         </select>
                     </div>
-                     <div className="flex items-center gap-4">
-                        <span className="text-sm text-dark-text-secondary">{wordCount} words</span>
-                        <span className="text-sm text-dark-text-secondary italic">
-                            {saveStatus === 'saving' && 'Saving...'}
-                            {saveStatus === 'saved' && 'All changes saved'}
-                            {saveStatus === 'unsaved' && 'Unsaved changes'}
-                        </span>
-                        <button onClick={() => onDeleteRequest(note)} aria-label="Delete note" className="p-2 text-dark-text-secondary hover:text-red-500 rounded-lg hover:bg-red-500/10">
-                            <TrashIcon className="w-5 h-5" />
-                        </button>
-                    </div>
+                </div>
+            </div>
+            <div className="flex-1 overflow-y-auto rich-text-editor">
+                 <div className="max-w-4xl mx-auto h-full p-4 md:p-6">
+                    <RichTextEditor 
+                        value={content} 
+                        onChange={(newContent) => { setContent(newContent); setSaveStatus('unsaved'); }} 
+                        ariaLabel="Note content editor"
+                        allNotes={allNotes}
+                    />
+                 </div>
+            </div>
+            <div className="p-2 border-t border-light-border dark:border-dark-border flex justify-between items-center gap-4">
+                <span className="text-sm text-dark-text-secondary">{wordCount} words</span>
+                <div className="flex items-center gap-2">
+                    <span className="text-sm text-dark-text-secondary italic">
+                        {saveStatus === 'saving' && 'Saving...'}
+                        {saveStatus === 'saved' && 'All changes saved'}
+                        {saveStatus === 'unsaved' && 'Unsaved changes'}
+                    </span>
+                    <button onClick={() => onShareRequest(note)} aria-label={`Share note: ${note.title}`} className="p-2 text-dark-text-secondary hover:text-primary rounded-lg hover:bg-primary/10">
+                        <ShareIcon className="w-5 h-5" />
+                    </button>
+                    <button onClick={() => onDeleteRequest(note)} aria-label={`Delete note: ${note.title}`} className="p-2 text-dark-text-secondary hover:text-red-500 rounded-lg hover:bg-red-500/10">
+                        <TrashIcon className="w-5 h-5" />
+                    </button>
                 </div>
             </div>
         </div>
     );
 };
+
+const ShareNoteModal: React.FC<{
+    note: Note | null;
+    onClose: () => void;
+    onStopSharing: (noteId: string) => void;
+}> = ({ note, onClose, onStopSharing }) => {
+    const { addNotification } = useNotifier();
+    const [copyButtonText, setCopyButtonText] = useState('Copy Link');
+    
+    if (!note || !note.shareId) return null;
+
+    const publicUrl = `${window.location.origin}${window.location.pathname}#/public/note/${note.shareId}`;
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(publicUrl).then(() => {
+            setCopyButtonText('Copied!');
+            addNotification('Public link copied to clipboard.', 'success');
+            setTimeout(() => setCopyButtonText('Copy Link'), 2000);
+        }).catch(err => {
+            addNotification('Failed to copy link.', 'error');
+        });
+    };
+
+    const handleStop = () => {
+        onStopSharing(note.id);
+    };
+
+    return (
+        <Modal isOpen={!!note} onClose={onClose} title="Share Note">
+            <p className="mb-4 text-dark-text-secondary">Anyone with this public link will be able to view this note. They will not be able to edit it.</p>
+            <div className="flex gap-2 p-2 bg-dark-bg border border-dark-border rounded-lg">
+                <input type="text" readOnly value={publicUrl} className="flex-1 bg-transparent focus:outline-none text-sm"/>
+                <button onClick={handleCopy} className="flex items-center gap-2 bg-primary text-white px-3 py-1 rounded-md text-sm font-semibold">
+                    <ClipboardIcon className="w-4 h-4" />
+                    {copyButtonText}
+                </button>
+            </div>
+            <div className="mt-6 flex justify-end">
+                 <button onClick={handleStop} className="text-sm text-red-400 hover:underline">
+                    Stop Sharing (disable link)
+                </button>
+            </div>
+        </Modal>
+    );
+};
+
 
 const Notes: React.FC = () => {
     const { user } = useContext(AuthContext);
@@ -240,7 +308,9 @@ const Notes: React.FC = () => {
     const debouncedSearchTerm = useDebounce(searchTerm, 250);
     const [selectedFolderId, setSelectedFolderId] = useState<string | 'all' | 'uncategorized'>('all');
     const [isFolderManagerOpen, setIsFolderManagerOpen] = useState(false);
+    const [noteToShare, setNoteToShare] = useState<Note | null>(null);
     const location = useLocation();
+    const navigate = useNavigate();
 
     const noteFolders = useMemo(() => folders.filter(f => f.type === 'note').sort((a,b) => a.name.localeCompare(b.name)), [folders]);
 
@@ -248,28 +318,47 @@ const Notes: React.FC = () => {
         const lowerCaseQuery = debouncedSearchTerm.toLowerCase();
 
         const filtered = allNotes.filter(note => {
-            // Folder filtering
             if (selectedFolderId === 'uncategorized' && note.folderId) {
                 return false;
             }
             if (selectedFolderId !== 'all' && selectedFolderId !== 'uncategorized' && note.folderId !== selectedFolderId) {
                 return false;
             }
-            
-            // Search term filtering
+
             if (debouncedSearchTerm) {
-                const hasTagMatch = note.tags?.some(tag => tag.toLowerCase().includes(lowerCaseQuery));
-                if (!note.title.toLowerCase().includes(lowerCaseQuery) && !hasTagMatch) {
+                const titleMatch = note.title.toLowerCase().includes(lowerCaseQuery);
+                const tagMatch = note.tags?.some(tag => tag.toLowerCase().includes(lowerCaseQuery));
+                if (!titleMatch && !tagMatch) {
                     return false;
                 }
             }
             
             return true;
         });
-        
+
         return filtered.sort((a, b) => (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt));
     }, [allNotes, debouncedSearchTerm, selectedFolderId]);
     
+    useEffect(() => {
+        const handleInternalLink = (event: Event) => {
+            const target = event.target as HTMLElement;
+            if (target.classList.contains('internal-link')) {
+                const noteId = target.getAttribute('data-note-id');
+                if (noteId) {
+                    const linkedNote = allNotes.find(n => n.id === noteId);
+                    if (linkedNote) {
+                        setSelectedNoteId(linkedNote.id);
+                        setSelectedFolderId(linkedNote.folderId || 'uncategorized');
+                        navigate('/dashboard/notes', { state: { selectedNoteId: linkedNote.id }, replace: true });
+                    }
+                }
+            }
+        };
+
+        document.addEventListener('click', handleInternalLink);
+        return () => document.removeEventListener('click', handleInternalLink);
+    }, [allNotes, navigate]);
+
     useEffect(() => {
         const currentNoteExists = sortedNotes.some(n => n.id === selectedNoteId);
 
@@ -287,13 +376,13 @@ const Notes: React.FC = () => {
     const handleAddNote = async () => {
         if (!user) return;
         try {
-            const newNoteData = {
+            const newNoteData = { 
                 user_id: user.id,
                 title: 'Untitled Note',
                 content: '',
                 tags: [],
                 folderId: (selectedFolderId !== 'all' && selectedFolderId !== 'uncategorized') ? selectedFolderId : null,
-                createdAt: Date.now(),
+                createdAt: Date.now()
             };
             const newNote = await addItem(newNoteData);
             setSelectedNoteId(newNote.id);
@@ -305,12 +394,12 @@ const Notes: React.FC = () => {
     const confirmDelete = async () => {
         if (!noteToDelete || isDeleting) return;
         setIsDeleting(true);
-        
+
         const element = document.getElementById(`note-row-${noteToDelete.id}`);
         if (element) {
             element.classList.add('animate-item-out');
         }
-
+        
         setTimeout(async () => {
             try {
                 await deleteItem(noteToDelete.id);
@@ -320,12 +409,29 @@ const Notes: React.FC = () => {
                     setSelectedNoteId(sortedNotes.length > 1 ? sortedNotes[Math.max(0, newSelectionIndex)].id : null);
                 }
             } catch (error) {
-                addNotification('Failed to delete note. Please try again.', 'error');
+                addNotification('Failed to delete note. Please check your connection and try again.', 'error');
             } finally {
                 setNoteToDelete(null);
                 setIsDeleting(false);
             }
-        }, 300); // Animation duration
+        }, 300);
+    };
+
+    const handleShareRequest = async (note: Note) => {
+        if (!note.shareId) {
+            const newShareId = generateUUID();
+            await updateItem(note.id, { shareId: newShareId });
+            const updatedNote = { ...note, shareId: newShareId };
+            setNoteToShare(updatedNote);
+        } else {
+            setNoteToShare(note);
+        }
+    };
+    
+    const handleStopSharing = async (noteId: string) => {
+        await updateItem(noteId, { shareId: undefined });
+        setNoteToShare(null);
+        addNotification('Sharing has been disabled for this note.', 'info');
     };
     
     const selectedNote = useMemo(() => allNotes.find(n => n.id === selectedNoteId), [allNotes, selectedNoteId]);
@@ -352,7 +458,7 @@ const Notes: React.FC = () => {
                     </button>
                 </div>
                  <div className="p-2 border-b border-light-border dark:border-dark-border">
-                    <input type="text" placeholder="Search notes or #tags" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full p-3 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg" />
+                    <input type="text" placeholder="Search notes..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full p-3 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg" />
                 </div>
                  <div className="p-2 border-b border-light-border dark:border-dark-border">
                     <label htmlFor="folder-filter" className="sr-only">Filter by folder</label>
@@ -393,13 +499,12 @@ const Notes: React.FC = () => {
             </div>
             <div className="flex-1 h-2/3 md:h-full">
                 {selectedNote ? (
-                    <NoteEditor key={selectedNote.id} note={selectedNote} folders={noteFolders} onUpdate={updateItem} onDeleteRequest={setNoteToDelete} />
+                    <NoteEditor key={selectedNote.id} note={selectedNote} allNotes={allNotes} folders={noteFolders} onUpdate={updateItem} onDeleteRequest={setNoteToDelete} onShareRequest={handleShareRequest} />
                 ) : (
                     <div className="h-full flex items-center justify-center">
                         <EmptyState 
-                            title={allNotes.length > 0 ? "No Note Selected" : "Capture Your Ideas"}
-                            message={allNotes.length > 0 ? "Select a note from the list to begin." : "Create your first note to capture your thoughts, ideas, and inspiration."}
-                            icon={<PencilIcon className="w-12 h-12" />}
+                            title={allNotes.length > 0 ? "No Note Selected" : "Capture Your First Idea"}
+                            message={allNotes.length > 0 ? "Select a note from the list to view it." : "Create your first note and get your thoughts down."}
                             actionText="Create a New Note"
                             onAction={handleAddNote}
                         />
@@ -417,6 +522,7 @@ const Notes: React.FC = () => {
                 </div>
             </Modal>
             <FolderManagerModal isOpen={isFolderManagerOpen} onClose={() => setIsFolderManagerOpen(false)} allNotes={allNotes} updateNote={updateItem} />
+            <ShareNoteModal note={noteToShare} onClose={() => setNoteToShare(null)} onStopSharing={handleStopSharing} />
         </div>
     );
 };
